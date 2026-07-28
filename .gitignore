@@ -16,3 +16,6 @@ __pycache__/
 venv/
 .env
 .setup_logs/
+.audit_logs/
+splits/*
+!splits/README.md
