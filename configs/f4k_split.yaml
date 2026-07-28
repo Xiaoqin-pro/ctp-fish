@@ -1,0 +1,8 @@
+metadata_path: outputs/gate0/audit/f4k_metadata.csv
+f4k16t_classes_path: outputs/gate0/audit/f4k16t_classes.csv
+output_dir: splits
+split_seed: 3407
+train_fraction: 0.70
+val_fraction: 0.15
+test_fraction: 0.15
+outer_folds: 3

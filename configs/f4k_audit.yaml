@@ -1,0 +1,10 @@
+# Set this after inspecting the manually downloaded Fish4Knowledge directory.
+data_root: D:/datasets/Fish4Knowledge
+image_extensions: [".jpg", ".jpeg", ".png", ".bmp"]
+mask_extensions: [".png", ".bmp", ".tif", ".tiff"]
+# Required named groups after real files are inspected: species_id, tracking_id.
+# Optional groups: species_name, fish_id.
+filename_regex: null
+mask_suffixes: ["_mask", "-mask", ".mask"]
+min_tracks_per_class: 15
+output_dir: outputs/gate0/audit
