@@ -1,6 +1,7 @@
 """Plain ResNet18 Gate-0 baseline; locked outer folds are always rejected."""
 from __future__ import annotations
 import argparse, csv, json, os, random, sys, tempfile
+from functools import partial
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import yaml
@@ -24,10 +25,9 @@ def _atomic_torch_save(payload: dict, destination: Path) -> None:
     torch.save(payload, temporary); os.replace(temporary, destination)
 
 
-def _worker_seed(seed: int):
-    def seed_worker(worker_id: int) -> None:
-        worker_seed = seed + worker_id; random.seed(worker_seed); np.random.seed(worker_seed)
-    return seed_worker
+def _seed_worker(worker_id: int, seed: int) -> None:
+    worker_seed = seed + worker_id
+    random.seed(worker_seed); np.random.seed(worker_seed)
 
 
 def _transforms(image_size: int):
@@ -59,7 +59,7 @@ def main() -> None:
     records=metadata.merge(split[["image_path","split"]],on="image_path",validate="one_to_one"); class_ids=sorted(records.species_id.astype(str).unique()); train_tf,eval_tf=_transforms(int(cfg["image_size"]))
     train_set=F4KDataset(records[records.split=="train"],train_tf,class_ids=class_ids); val_set=F4KDataset(records[records.split=="val"],eval_tf,class_ids=class_ids)
     batch=int(cfg["batch_size"]); device=torch.device("cuda" if torch.cuda.is_available() else "cpu"); generator=torch.Generator().manual_seed(seed)
-    common=dict(batch_size=batch, num_workers=2, pin_memory=device.type=="cuda", worker_init_fn=_worker_seed(seed), generator=generator)
+    common=dict(batch_size=batch, num_workers=2, pin_memory=device.type=="cuda", worker_init_fn=partial(_seed_worker, seed=seed), generator=generator)
     train_loader=DataLoader(train_set,shuffle=True,**common); val_loader=DataLoader(val_set,shuffle=False,**common)
     model=build_resnet18(len(class_ids)).to(device); optimizer=AdamW(model.parameters(),lr=float(cfg["learning_rate"]),weight_decay=float(cfg["weight_decay"])); scheduler=CosineAnnealingLR(optimizer,T_max=int(cfg["epochs"])); scaler=torch.amp.GradScaler(device.type,enabled=bool(cfg["amp"]) and device.type=="cuda")
     output=Path("outputs/gate0/baselines")/f"resnet18_{args.split}_seed{seed}"; output.mkdir(parents=True,exist_ok=True); history=[]; best=-1.; patience=0; start=1
