@@ -16,6 +16,8 @@ __pycache__/
 venv/
 .env
 .setup_logs/
+.setup_wheels/
 .audit_logs/
 splits/*
 !splits/README.md
+reports/f4k_data_audit.md
