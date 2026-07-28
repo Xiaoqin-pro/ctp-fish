@@ -11,9 +11,9 @@ from datasets.mask_variants import apply_mask_variant
 
 
 class F4KDataset(Dataset):
-    def __init__(self, records: pd.DataFrame, transform=None, mask_variant: str = "original") -> None:
+    def __init__(self, records: pd.DataFrame, transform=None, mask_variant: str = "original", class_ids: list[str] | None = None) -> None:
         self.records = records.reset_index(drop=True).copy(); self.transform = transform; self.mask_variant = mask_variant
-        self.class_ids = sorted(self.records.species_id.astype(str).unique())
+        self.class_ids = class_ids or sorted(self.records.species_id.astype(str).unique())
         self.class_to_index = {value: index for index, value in enumerate(self.class_ids)}
 
     def __len__(self) -> int: return len(self.records)

@@ -10,5 +10,5 @@ early_stopping_patience: 7
 optimizer: AdamW
 learning_rate: 0.0003
 weight_decay: 0.0001
-seed: 3407
+seeds: [3407, 2026, 17]
 amp: true
