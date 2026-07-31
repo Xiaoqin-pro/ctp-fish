@@ -48,11 +48,13 @@ def main() -> None:
     parser.add_argument("--config", default="configs/resnet18_gate0.yaml")
     parser.add_argument("--output-report", default="reports/ctp_fish_gate0_report.md")
     parser.add_argument("--output-summary", default="experiments/ctp_fish_gate0_summary.csv")
+    parser.add_argument("--output-per-class", default="experiments/ctp_fish_gate0_per_class_summary.csv")
+    parser.add_argument("--output-track-errors", default="experiments/ctp_fish_gate0_track_error_summary.csv")
     args = parser.parse_args()
     cfg_path = Path(args.config); cfg = yaml.safe_load(cfg_path.read_text())
     root = Path("outputs/gate0"); base = root / "baselines"; background = root / "background_audit"
     metadata = pd.read_csv(cfg["metadata_path"])
-    rows = []
+    rows = []; per_class_rows = []; track_frames = []
     grouped: dict[str, list[dict]] = {"image": [], "track": []}
     for split in grouped:
         for seed in cfg["seeds"]:
@@ -60,13 +62,31 @@ def main() -> None:
             path = base / run / "evaluation" / "metrics_test.json"
             if not path.exists(): raise FileNotFoundError(path)
             metric = json.loads(path.read_text()); grouped[split].append(metric); rows.append(_metric_row(run, split, metric))
+            for index, species_id in enumerate(metric["class_ids"]):
+                per_class_rows.append({"run": run, "split": split, "species_id": str(species_id), "f1": metric["per_class_f1"][index], "recall": metric["per_class_recall"][index], "precision": metric["per_class_precision"][index], "support": metric["per_class_support"][index]})
+            if split == "track":
+                frame = pd.read_csv(base / run / "evaluation" / "per_image_test.csv")
+                frame["run"] = run; track_frames.append(frame)
     summary_path = Path(args.output_summary); summary_path.parent.mkdir(parents=True, exist_ok=True)
     pd.DataFrame(rows).to_csv(summary_path, index=False)
+    per_class = pd.DataFrame(per_class_rows)
+    track_manifest = pd.read_csv(cfg["track_split_path"])
+    train_counts = track_manifest[track_manifest.split == "train"].merge(metadata[["image_path", "species_id"]], on="image_path", validate="one_to_one").species_id.astype(str).value_counts()
+    ordered_species = sorted(train_counts.index.tolist(), key=lambda species: (-int(train_counts[species]), species))
+    cuts = np.array_split(np.array(ordered_species, dtype=object), 3)
+    tier = {species: name for name, group in zip(("head", "mid", "tail"), cuts) for species in group.tolist()}
+    per_class["tier"] = per_class.species_id.map(tier)
+    per_class["train_images"] = per_class.species_id.map(train_counts.to_dict())
+    per_class_path = Path(args.output_per_class); per_class_path.parent.mkdir(parents=True, exist_ok=True); per_class.to_csv(per_class_path, index=False)
+    track_errors = pd.concat(track_frames, ignore_index=True).groupby("group_id", as_index=False).correct.agg(["mean", "count"]).reset_index().rename(columns={"mean": "mean_correct", "count": "evaluated_images"})
+    track_errors["mean_error"] = 1.0 - track_errors.mean_correct
+    track_error_path = Path(args.output_track_errors); track_error_path.parent.mkdir(parents=True, exist_ok=True); track_errors.sort_values(["mean_error", "evaluated_images"], ascending=[False, False]).to_csv(track_error_path, index=False)
     def aggregate(split: str, key: str) -> tuple[float, float]: return mean_std([float(x[key]) for x in grouped[split]])
     image_macro, image_macro_std = aggregate("image", "macro_f1")
     track_macro, track_macro_std = aggregate("track", "macro_f1")
     image_track, image_track_std = aggregate("image", "track_balanced_accuracy")
     track_track, track_track_std = aggregate("track", "track_balanced_accuracy")
+    tier_table = per_class.groupby(["split", "tier"], as_index=False).f1.mean().pivot(index="tier", columns="split", values="f1").reindex(["head", "mid", "tail"])
     similarity = json.loads((root / "similarity" / "similarity_summary.json").read_text())
     background_rows = []
     for path in background.rglob("metrics_test.json"):
@@ -102,6 +122,16 @@ the locked outer folds.
 
 The macro-F1 gap is {(image_macro-track_macro)*100:.2f} percentage points. It is evidence that the conventional image-level protocol is optimistic for class-balanced recognition, even though aggregate image accuracy remains high.
 
+### Head/mid/tail class summary
+
+Classes are assigned once by descending track-level training-image count and split into three near-equal groups (head/mid/tail); values are unweighted mean per-class F1 across three seeds.
+
+| Class-frequency tier | Image-level F1 | Track-level F1 |
+|---|---:|---:|
+| Head | {tier_table.loc['head', 'image']:.4f} | {tier_table.loc['head', 'track']:.4f} |
+| Mid | {tier_table.loc['mid', 'image']:.4f} | {tier_table.loc['mid', 'track']:.4f} |
+| Tail | {tier_table.loc['tail', 'image']:.4f} | {tier_table.loc['tail', 'track']:.4f} |
+
 ## Cross-partition similarity audit
 
 | Protocol | Mean pHash distance | Mean feature cosine | pHash nearest-neighbor same-track fraction | Feature nearest-neighbor same-track fraction |
@@ -134,6 +164,8 @@ The observed combination of (i) track-crossing similarity under image-level spli
 - Config SHA-256: `{hashes['config']}`
 - Image-level split SHA-256: `{hashes['image_split']}`
 - Track-level split SHA-256: `{hashes['track_split']}`
+- Per-class table: `{per_class_path}`
+- Track-error table: `{track_error_path}`
 - Official outer folds remain locked and were not evaluated.
 """
     report_path = Path(args.output_report); report_path.parent.mkdir(parents=True, exist_ok=True); report_path.write_text(report, encoding="utf-8")
