@@ -71,7 +71,7 @@ def main() -> None:
     pd.DataFrame(rows).to_csv(summary_path, index=False)
     per_class = pd.DataFrame(per_class_rows)
     track_manifest = pd.read_csv(cfg["track_split_path"])
-    train_counts = track_manifest[track_manifest.split == "train"].merge(metadata[["image_path", "species_id"]], on="image_path", validate="one_to_one").species_id.astype(str).value_counts()
+    train_counts = track_manifest[track_manifest.split == "train"].species_id.astype(str).value_counts()
     ordered_species = sorted(train_counts.index.tolist(), key=lambda species: (-int(train_counts[species]), species))
     cuts = np.array_split(np.array(ordered_species, dtype=object), 3)
     tier = {species: name for name, group in zip(("head", "mid", "tail"), cuts) for species in group.tolist()}
