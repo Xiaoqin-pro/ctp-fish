@@ -44,7 +44,8 @@ def main() -> None:
     root=Path(args.output_dir); root.mkdir(parents=True, exist_ok=True); outputs=[]
     for partition in ("train", "val"):
         destination=root/f"shuffled_mask_pairs_{partition}.csv"; build_pairs(records, partition).to_csv(destination, index=False); outputs.append(destination)
-    manifest={"schema_version":"cxt_fish_shuffled_mask_pairs_v1", "salt":SALT, "seed":407, "partitions":{path.stem.replace("shuffled_mask_pairs_", ""): {"path":str(path), "sha256":_sha(path), "rows":len(pd.read_csv(path))} for path in outputs}, "internal_test_read":False, "outer_folds_read":False}
+    combined=root/"shuffled_mask_pairs.csv"; pd.concat([pd.read_csv(path) for path in outputs], ignore_index=True).to_csv(combined, index=False)
+    manifest={"schema_version":"cxt_fish_shuffled_mask_pairs_v1", "salt":SALT, "seed":407, "combined":{"path":str(combined),"sha256":_sha(combined),"rows":len(pd.read_csv(combined))}, "partitions":{path.stem.replace("shuffled_mask_pairs_", ""): {"path":str(path), "sha256":_sha(path), "rows":len(pd.read_csv(path))} for path in outputs}, "internal_test_read":False, "outer_folds_read":False}
     (root/"manifest.json").write_text(json.dumps(manifest, indent=2))
     print(json.dumps(manifest, indent=2))
 
