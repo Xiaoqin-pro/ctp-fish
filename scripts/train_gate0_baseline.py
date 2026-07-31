@@ -50,19 +50,22 @@ def _run_epoch(model, loader, optimizer, scaler, device, amp: bool, train: bool)
     return loss_sum/count,correct/count
 
 def main() -> None:
-    parser=argparse.ArgumentParser(); parser.add_argument("--config",required=True); parser.add_argument("--split",choices=["image","track"],required=True); parser.add_argument("--seed",type=int); parser.add_argument("--resume"); parser.add_argument("--outer-folds"); parser.add_argument("--dry-run",action="store_true"); args=parser.parse_args()
+    parser=argparse.ArgumentParser(); parser.add_argument("--config",required=True); parser.add_argument("--split",choices=["image","track"],required=True); parser.add_argument("--seed",type=int); parser.add_argument("--resume"); parser.add_argument("--outer-folds"); parser.add_argument("--mask-variant",choices=["original","foreground_only","background_only"],default="original"); parser.add_argument("--run-name"); parser.add_argument("--dry-run",action="store_true"); args=parser.parse_args()
     if args.outer_folds: raise ValueError("Outer evaluation folds are locked during Gate-0.")
     cfg=yaml.safe_load(Path(args.config).read_text()); seed=int(args.seed if args.seed is not None else cfg["seeds"][0]); seed_everything(seed)
-    if args.dry_run: print({"model":"torchvision ResNet18 ImageNet", "split":args.split, "epochs":cfg["epochs"], "seed":seed, "forbidden_methods":"no reweighting, no trajectory sampler, no contrastive/prototype method"}); return
+    if args.dry_run: print({"model":"torchvision ResNet18 ImageNet", "split":args.split, "epochs":cfg["epochs"], "seed":seed, "mask_variant":args.mask_variant, "forbidden_methods":"no reweighting, no trajectory sampler, no contrastive/prototype method"}); return
     metadata=pd.read_csv(cfg["metadata_path"]); split_path=Path(cfg[f"{args.split}_split_path"]); split=pd.read_csv(split_path)
     if split_path.resolve()==Path(cfg["outer_folds_path"]).resolve(): raise ValueError("Outer evaluation folds are locked during Gate-0.")
     records=metadata.merge(split[["image_path","split"]],on="image_path",validate="one_to_one"); class_ids=sorted(records.species_id.astype(str).unique()); train_tf,eval_tf=_transforms(int(cfg["image_size"]))
-    train_set=F4KDataset(records[records.split=="train"],train_tf,class_ids=class_ids); val_set=F4KDataset(records[records.split=="val"],eval_tf,class_ids=class_ids)
+    train_set=F4KDataset(records[records.split=="train"],train_tf,mask_variant=args.mask_variant,class_ids=class_ids); val_set=F4KDataset(records[records.split=="val"],eval_tf,mask_variant=args.mask_variant,class_ids=class_ids)
     batch=int(cfg["batch_size"]); device=torch.device("cuda" if torch.cuda.is_available() else "cpu"); generator=torch.Generator().manual_seed(seed)
     common=dict(batch_size=batch, num_workers=2, pin_memory=device.type=="cuda", worker_init_fn=partial(_seed_worker, seed=seed), generator=generator)
     train_loader=DataLoader(train_set,shuffle=True,**common); val_loader=DataLoader(val_set,shuffle=False,**common)
     model=build_resnet18(len(class_ids)).to(device); optimizer=AdamW(model.parameters(),lr=float(cfg["learning_rate"]),weight_decay=float(cfg["weight_decay"])); scheduler=CosineAnnealingLR(optimizer,T_max=int(cfg["epochs"])); scaler=torch.amp.GradScaler(device.type,enabled=bool(cfg["amp"]) and device.type=="cuda")
-    output=Path("outputs/gate0/baselines")/f"resnet18_{args.split}_seed{seed}"; output.mkdir(parents=True,exist_ok=True); history=[]; best=-1.; patience=0; start=1
+    run_name=args.run_name or f"resnet18_{args.split}_seed{seed}"
+    if Path(run_name).name != run_name: raise ValueError("run-name must be a simple directory name.")
+    output=Path("outputs/gate0/background_audit")/run_name if args.run_name else Path("outputs/gate0/baselines")/run_name
+    output.mkdir(parents=True,exist_ok=True); history=[]; best=-1.; patience=0; start=1
     if args.resume:
         state=torch.load(args.resume,map_location=device,weights_only=False); model.load_state_dict(state["model"]); optimizer.load_state_dict(state["optimizer"]); scheduler.load_state_dict(state["scheduler"]); scaler.load_state_dict(state["scaler"]); history=state["history"]; best=state["best_val_accuracy"]; start=int(state["epoch"])+1
     for epoch in range(start,int(cfg["epochs"])+1):
@@ -74,5 +77,5 @@ def main() -> None:
         pd.DataFrame(history).to_csv(output/"training_curve.csv",index=False)
         print(json.dumps(row))
         if patience>=int(cfg["early_stopping_patience"]): break
-    (output/"run_metadata.json").write_text(json.dumps({"split":args.split,"seed":seed,"device":str(device),"batch_size":batch,"class_ids":class_ids},indent=2))
+    (output/"run_metadata.json").write_text(json.dumps({"split":args.split,"seed":seed,"device":str(device),"batch_size":batch,"class_ids":class_ids,"mask_variant":args.mask_variant,"audit_run":bool(args.run_name)},indent=2))
 if __name__=="__main__": main()
