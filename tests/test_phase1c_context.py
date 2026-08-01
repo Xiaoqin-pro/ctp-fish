@@ -2,10 +2,12 @@ from __future__ import annotations
 
 import pandas as pd
 import numpy as np
+import torch
 from PIL import Image
 
 from datasets.context_views import context_swap_view, foreground_blur_view
 from scripts.build_phase1c_context_swap_manifest import build_manifest
+from losses.context_consistency import context_consistency_loss, variant_losses
 
 
 def records() -> pd.DataFrame:
@@ -44,3 +46,12 @@ def test_swap_keeps_recipient_foreground_and_uses_donor_background():
     result = context_swap_view(recipient, mask, donor, feather_radius=0)
     assert result.getpixel((4, 4)) == recipient.getpixel((4, 4))
     assert result.getpixel((0, 0)) == donor.getpixel((0, 0))
+
+
+def test_context_objective_detaches_foreground_branch_and_variants_are_fixed():
+    original, foreground = torch.randn(2, 512, requires_grad=True), torch.randn(2, 512, requires_grad=True)
+    context_consistency_loss(original, foreground).backward()
+    assert original.grad is not None and foreground.grad is None
+    assert variant_losses("f1") == {"foreground_ce": True, "consistency": False}
+    assert variant_losses("f2") == {"foreground_ce": False, "consistency": True}
+    assert variant_losses("f3") == {"foreground_ce": True, "consistency": True}
