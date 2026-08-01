@@ -1,0 +1,18 @@
+# Frozen Phase 1C context-control pilot. Internal test and outer folds are locked.
+metadata_path: outputs/gate0/audit/f4k_metadata.csv
+track_split_path: splits/f4k16t_track_level_dev.csv
+outer_folds_path: splits/f4k16t_outer_3fold.json
+image_size: 224
+pilot_seed: 3407
+foreground_ce_weight: 1.0
+context_consistency_weight: 0.1
+foreground_blur_kernel: 21
+foreground_blur_sigma: 5.0
+mask_feather_radius: 3
+swap_manifest_path: splits/f4k16t_phase1c_context_swap_val.csv
+swap_manifest_seed: 3407
+swap_schema_version: cxt_fish_phase1c_swap_v1
+base_checkpoint: outputs/cxt_fish/phase1a_replication/A1_s1_ce_seed3407/best.pt
+locked_partitions:
+  evaluation: val
+  prohibited: [test, outer_folds]
