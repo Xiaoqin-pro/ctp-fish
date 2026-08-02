@@ -47,8 +47,11 @@ def capture_rng() -> dict:
 
 
 def restore_rng(payload: dict) -> None:
-    random.setstate(payload["python"]); np.random.set_state(payload["numpy"]); torch.set_rng_state(payload["torch"])
-    if "cuda" in payload and torch.cuda.is_available(): torch.cuda.set_rng_state_all(payload["cuda"])
+    random.setstate(payload["python"]); np.random.set_state(payload["numpy"])
+    # Checkpoints are loaded onto the training device; CPU RNG state must remain a CPU ByteTensor.
+    torch.set_rng_state(payload["torch"].detach().cpu().to(dtype=torch.uint8).contiguous())
+    if "cuda" in payload and torch.cuda.is_available():
+        torch.cuda.set_rng_state_all([state.detach().cpu().to(dtype=torch.uint8).contiguous() for state in payload["cuda"]])
 
 
 def eval_transform(size: int):
