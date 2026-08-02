@@ -49,6 +49,14 @@ def capture_rng() -> dict:
     return result
 
 
+def restore_rng(state: dict) -> None:
+    random.setstate(state["python"])
+    np.random.set_state(state["numpy"])
+    torch.set_rng_state(state["torch"])
+    if torch.cuda.is_available() and "cuda" in state:
+        torch.cuda.set_rng_state_all(state["cuda"])
+
+
 def eval_transform(size: int):
     return transforms.Compose([transforms.Resize(256), transforms.CenterCrop(size), transforms.ToTensor(), transforms.Normalize([.485, .456, .406], [.229, .224, .225])])
 
@@ -91,6 +99,7 @@ def main() -> None:
     parser.add_argument("--seed", type=int)
     parser.add_argument("--output-root", default="outputs/cxt_fish/ctdfs_pilot")
     parser.add_argument("--run-name")
+    parser.add_argument("--resume", help="resume from a complete epoch checkpoint")
     args = parser.parse_args(); cfg = yaml.safe_load(Path(args.config).read_text(encoding="utf-8"))
     seed = int(args.seed if args.seed is not None else cfg["pilot_seed"]); seed_everything(seed)
     split_path = Path(cfg["track_split_path"])
@@ -116,12 +125,27 @@ def main() -> None:
     model = ResNet18Context(len(class_ids)).to(device); optimizer = AdamW(model.parameters(), lr=float(cfg["learning_rate"]), weight_decay=float(cfg["weight_decay"]))
     scheduler = CosineAnnealingLR(optimizer, T_max=int(cfg["epochs"])); scaler = torch.amp.GradScaler(device.type, enabled=bool(cfg["amp"]) and device.type == "cuda")
     name = args.run_name or f"{args.variant}_seed{seed}"; output = Path(args.output_root) / name
-    if output.exists() and any(output.iterdir()): raise FileExistsError(f"refusing to overwrite {output}")
-    output.mkdir(parents=True, exist_ok=True); history = []; best = -1.0; patience = 0
-    for epoch in range(1, int(cfg["epochs"]) + 1):
+    history = []; best = -1.0; patience = 0; start_epoch = 1
+    if args.resume:
+        resume_path = Path(args.resume)
+        if not resume_path.is_file(): raise FileNotFoundError(resume_path)
+        checkpoint = torch.load(resume_path, map_location=device, weights_only=False)
+        if checkpoint.get("variant") != args.variant.lower(): raise ValueError("resume checkpoint variant mismatch")
+        if [str(v) for v in checkpoint.get("class_ids", [])] != class_ids: raise ValueError("resume checkpoint class protocol mismatch")
+        if checkpoint.get("epoch", 0) < 1: raise ValueError("resume checkpoint must be a completed epoch")
+        model.load_state_dict(checkpoint["model"]); optimizer.load_state_dict(checkpoint["optimizer"]); scheduler.load_state_dict(checkpoint["scheduler"]); scaler.load_state_dict(checkpoint["scaler"]); restore_rng(checkpoint["rng_state"])
+        history = list(checkpoint.get("history", [])); best = float(checkpoint.get("best_val_accuracy", max((float(row["val_accuracy"]) for row in history), default=-1.0)))
+        last_best = max((idx for idx, row in enumerate(history) if float(row["val_accuracy"]) == best), default=-1)
+        patience = len(history) - last_best - 1
+        start_epoch = int(checkpoint["epoch"]) + 1
+        output = resume_path.parent
+    elif output.exists() and any(output.iterdir()):
+        raise FileExistsError(f"refusing to overwrite {output}")
+    output.mkdir(parents=True, exist_ok=True)
+    for epoch in range(start_epoch, int(cfg["epochs"]) + 1):
         sampler.set_epoch(epoch); train_metrics = train_epoch(model, train_loader, optimizer, scaler, device, bool(cfg["amp"])); val_loss, val_accuracy = validate(model, val_loader, device, bool(cfg["amp"])); scheduler.step()
         row = {"epoch": epoch, **{f"train_{key}": value for key, value in train_metrics.items()}, "val_loss": val_loss, "val_accuracy": val_accuracy, "lr": optimizer.param_groups[0]["lr"]}; history.append(row)
-        payload = {"model": model.state_dict(), "class_ids": class_ids, "class_protocol": class_protocol, "epoch": epoch, "variant": args.variant.lower(), "config": cfg, "seed": seed, "original_sampler": cfg["original_sampler"], "foreground_sampler": foreground_mode, "internal_test_accessed": False, "outer_folds_accessed": False, "history": history, "best_val_accuracy": best, "rng_state": capture_rng()}
+        payload = {"model": model.state_dict(), "optimizer": optimizer.state_dict(), "scheduler": scheduler.state_dict(), "scaler": scaler.state_dict(), "class_ids": class_ids, "class_protocol": class_protocol, "epoch": epoch, "variant": args.variant.lower(), "config": cfg, "seed": seed, "original_sampler": cfg["original_sampler"], "foreground_sampler": foreground_mode, "internal_test_accessed": False, "outer_folds_accessed": False, "history": history, "best_val_accuracy": best, "patience": patience, "rng_state": capture_rng()}
         if val_accuracy > best: best, patience = val_accuracy, 0; payload["best_val_accuracy"] = best; atomic_save(payload, output / "best.pt")
         else: patience += 1
         atomic_save(payload, output / "last.pt"); pd.DataFrame(history).to_csv(output / "training_curve.csv", index=False); print(json.dumps(row))
