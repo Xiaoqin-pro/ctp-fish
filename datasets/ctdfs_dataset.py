@@ -32,7 +32,7 @@ class CTDFSDataset(Dataset):
         foreground_mask = Image.open(Path(foreground_row.mask_path)).convert("L")
         foreground = foreground_blur_view(foreground_source, foreground_mask, **self.kwargs)
         # Independent streams receive independent random geometry/photometry.
-        original_view = self.transform(original, original)
+        original_view, _ = self.transform(original, original)
         _, foreground_view = self.transform(foreground_source, foreground)
         return (
             original_view,
