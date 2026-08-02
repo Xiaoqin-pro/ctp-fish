@@ -99,7 +99,12 @@ def main() -> None:
     train = metadata.merge(split.loc[split.split == "train", ["image_path", "split"]], on="image_path", validate="one_to_one")
     val = metadata.merge(split.loc[split.split == "val", ["image_path", "split"]], on="image_path", validate="one_to_one")
     if train.empty or val.empty or set(train.split) != {"train"} or set(val.split) != {"val"}: raise ValueError("CT-DFS requires train and val only")
-    class_ids = sorted(metadata.species_id.astype(str).unique())
+    class_protocol = json.loads(Path(cfg["class_ids_path"]).read_text(encoding="utf-8"))
+    class_ids = [str(value) for value in class_protocol["class_ids"]]
+    if len(class_ids) != 16 or int(class_protocol["class_count"]) != 16:
+        raise ValueError("F4K-16T class protocol must contain exactly 16 classes")
+    if set(train.species_id.astype(str)) != set(class_ids) or set(val.species_id.astype(str)) != set(class_ids):
+        raise ValueError("train/val species set does not match frozen F4K-16T class protocol")
     train_set = CTDFSDataset(train, PairedTrainTransform(int(cfg["image_size"])), class_ids, blur_kernel=int(cfg["foreground_blur_kernel"]), blur_sigma=float(cfg["foreground_blur_sigma"]), feather_radius=int(cfg["mask_feather_radius"]))
     val_set = F4KDataset(val, eval_transform(int(cfg["image_size"])), class_ids=class_ids)
     foreground_mode = str(cfg["p1_foreground_sampler"] if args.variant == "P1" else cfg["p2_foreground_sampler"])
@@ -116,7 +121,7 @@ def main() -> None:
     for epoch in range(1, int(cfg["epochs"]) + 1):
         sampler.set_epoch(epoch); train_metrics = train_epoch(model, train_loader, optimizer, scaler, device, bool(cfg["amp"])); val_loss, val_accuracy = validate(model, val_loader, device, bool(cfg["amp"])); scheduler.step()
         row = {"epoch": epoch, **{f"train_{key}": value for key, value in train_metrics.items()}, "val_loss": val_loss, "val_accuracy": val_accuracy, "lr": optimizer.param_groups[0]["lr"]}; history.append(row)
-        payload = {"model": model.state_dict(), "class_ids": class_ids, "epoch": epoch, "variant": args.variant.lower(), "config": cfg, "seed": seed, "original_sampler": cfg["original_sampler"], "foreground_sampler": foreground_mode, "internal_test_accessed": False, "outer_folds_accessed": False, "history": history, "best_val_accuracy": best, "rng_state": capture_rng()}
+        payload = {"model": model.state_dict(), "class_ids": class_ids, "class_protocol": class_protocol, "epoch": epoch, "variant": args.variant.lower(), "config": cfg, "seed": seed, "original_sampler": cfg["original_sampler"], "foreground_sampler": foreground_mode, "internal_test_accessed": False, "outer_folds_accessed": False, "history": history, "best_val_accuracy": best, "rng_state": capture_rng()}
         if val_accuracy > best: best, patience = val_accuracy, 0; payload["best_val_accuracy"] = best; atomic_save(payload, output / "best.pt")
         else: patience += 1
         atomic_save(payload, output / "last.pt"); pd.DataFrame(history).to_csv(output / "training_curve.csv", index=False); print(json.dumps(row))

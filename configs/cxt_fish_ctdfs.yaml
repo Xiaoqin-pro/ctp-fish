@@ -2,6 +2,7 @@
 metadata_path: outputs/gate0/audit/f4k_metadata.csv
 track_split_path: splits/f4k16t_track_level_dev.csv
 outer_folds_path: splits/f4k16t_outer_3fold.json
+class_ids_path: splits/f4k16t_class_ids.json
 image_size: 224
 batch_size: 64
 epochs: 40
