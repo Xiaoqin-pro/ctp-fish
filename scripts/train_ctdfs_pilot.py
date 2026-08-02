@@ -129,7 +129,9 @@ def main() -> None:
     if args.resume:
         resume_path = Path(args.resume)
         if not resume_path.is_file(): raise FileNotFoundError(resume_path)
-        checkpoint = torch.load(resume_path, map_location=device, weights_only=False)
+        # Keep RNG state on CPU; map_location=device would move the default
+        # generator state to CUDA and make torch.set_rng_state reject it.
+        checkpoint = torch.load(resume_path, map_location="cpu", weights_only=False)
         if checkpoint.get("variant") != args.variant.lower(): raise ValueError("resume checkpoint variant mismatch")
         if [str(v) for v in checkpoint.get("class_ids", [])] != class_ids: raise ValueError("resume checkpoint class protocol mismatch")
         if checkpoint.get("epoch", 0) < 1: raise ValueError("resume checkpoint must be a completed epoch")
