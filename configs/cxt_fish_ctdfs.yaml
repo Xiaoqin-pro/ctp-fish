@@ -1,0 +1,23 @@
+# CT-DFS final method pilot. Internal test and outer folds remain locked.
+metadata_path: outputs/gate0/audit/f4k_metadata.csv
+track_split_path: splits/f4k16t_track_level_dev.csv
+outer_folds_path: splits/f4k16t_outer_3fold.json
+image_size: 224
+batch_size: 64
+epochs: 40
+early_stopping_patience: 7
+optimizer: AdamW
+learning_rate: 0.0003
+weight_decay: 0.0001
+amp: true
+pilot_seed: 3407
+foreground_ce_weight: 1.0
+foreground_blur_kernel: 21
+foreground_blur_sigma: 5.0
+mask_feather_radius: 3
+original_sampler: s1_track_uniform
+p1_foreground_sampler: s1_track_uniform
+p2_foreground_sampler: s3_class_track_uniform
+locked_partitions:
+  evaluation: val
+  prohibited: [test, outer_folds]
