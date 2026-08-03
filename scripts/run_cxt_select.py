@@ -32,7 +32,7 @@ def score_arrays(f1_logits: np.ndarray, f3_logits: np.ndarray, seed: int) -> dic
     def softmax(x):
         x = x - x.max(axis=1, keepdims=True); e = np.exp(x); return e / e.sum(axis=1, keepdims=True)
     p = softmax(f1_logits); q = softmax(f3_logits); m = 0.5 * (p + q)
-    js = 0.5 * (p * (np.log(np.maximum(p, 1e-12)) - np.log(np.maximum(m, 1e-12))).sum(1)) + 0.5 * (q * (np.log(np.maximum(q, 1e-12)) - np.log(np.maximum(m, 1e-12))).sum(1))
+    js = 0.5 * (p * (np.log(np.maximum(p, 1e-12)) - np.log(np.maximum(m, 1e-12)))).sum(1) + 0.5 * (q * (np.log(np.maximum(q, 1e-12)) - np.log(np.maximum(m, 1e-12)))).sum(1)
     return {
         "f1_msp": 1.0 - p.max(axis=1),
         "f1_entropy": -(p * np.log(np.maximum(p, 1e-12))).sum(axis=1),
@@ -85,7 +85,7 @@ def bootstrap_pair(frame: pd.DataFrame, js: np.ndarray, msp: np.ndarray, reps: i
     for (species, _group), indices in groups.items(): by_species.setdefault(str(species), []).append(np.asarray(indices, dtype=int))
     values = {"aurc_clean_error": [], "selective_risk_90": [], "cross_swap_auprc": [], "dar_flip_auprc": []}
     for _ in range(reps):
-        sampled = [rng.choice(group_list, size=len(group_list), replace=True) for group_list in by_species.values()]; indices = np.concatenate([np.concatenate(x) for x in sampled]); sub = frame.iloc[indices].reset_index(drop=True)
+        sampled = [[group_list[int(index)] for index in rng.integers(0, len(group_list), size=len(group_list))] for group_list in by_species.values()]; indices = np.concatenate([np.concatenate(x) for x in sampled]); sub = frame.iloc[indices].reset_index(drop=True)
         for name, score in (("js", js[indices]), ("msp", msp[indices])):
             clean = sub.f1_prediction.ne(sub.target).to_numpy(); cross_eligible = sub.f1_prediction.eq(sub.target).to_numpy(); cross = sub.cross_prediction.ne(sub.target).to_numpy()[cross_eligible]; dar = sub.cross_prediction.eq(sub.cross_donor_target).to_numpy()[cross_eligible]
             key = {"js": "js", "msp": "msp"}[name]; values.setdefault(key, [])
@@ -105,20 +105,24 @@ def main() -> None:
     train_records = metadata.merge(split.loc[split.split == "train", ["image_path", "split"]], on="image_path", validate="one_to_one"); train_counts = train_records.species_id.astype(str).value_counts(); ordered = sorted(class_ids, key=lambda x: (-int(train_counts.get(x, 0)), x)); tier_map = {x: tier for tier, group in zip(("head", "mid", "tail"), np.array_split(np.asarray(ordered, dtype=object), 3)) for x in group.tolist()}
     manifest = pd.read_csv(cfg["swap_manifest_path"]); dataset = ContextEvaluationDataset(records, manifest, evaluation_transform(int(cfg["image_size"])), cfg, class_ids); loader = DataLoader(dataset, batch_size=int(cfg["batch_size"]), shuffle=False, num_workers=2)
     for seed in cfg["seeds"]:
-        pair = cfg["checkpoint_pairs"][str(seed)]; models = [load_checkpoint(Path(pair[name]), torch.device("cuda" if torch.cuda.is_available() else "cpu"))[0] for name in ("f1", "f3")]; device = torch.device("cuda" if torch.cuda.is_available() else "cpu"); logits = {name: {view: [] for view in ("original", "foreground", "same_swap", "cross_swap")} for name in ("f1", "f3")}; targets = []; donors = []; paths = []; groups = []
-        with torch.no_grad():
-            for original, foreground, same, cross, target, donor, path, group in loader:
-                for model_name, model in zip(("f1", "f3"), models):
-                    for view_name, image in (("original", original), ("foreground", foreground), ("same_swap", same), ("cross_swap", cross)):
-                        logits[model_name][view_name].append(predict(model, image.to(device)).cpu().numpy())
-                targets.extend(target.tolist()); donors.extend(donor.tolist()); paths.extend(path); groups.extend(group)
-        f1_logits = {view: np.concatenate(logits["f1"][view]) for view in logits["f1"]}; f3_logits = {view: np.concatenate(logits["f3"][view]) for view in logits["f3"]}; np.savez_compressed(output_root / f"seed_{seed}_logits.npz", **{f"f1_{view}": value.astype(np.float32) for view, value in f1_logits.items()}, **{f"f3_{view}": value.astype(np.float32) for view, value in f3_logits.items()}, target=np.asarray(targets, dtype=np.int64), cross_donor_target=np.asarray(donors, dtype=np.int64))
+        pair = cfg["checkpoint_pairs"][str(seed)]; cache_path = output_root / f"seed_{seed}_logits.npz"; ordered_records = records.sort_values("image_path").reset_index(drop=True)
+        if cache_path.exists():
+            cache = np.load(cache_path); f1_logits = {view: cache[f"f1_{view}"] for view in ("original", "foreground", "same_swap", "cross_swap")}; f3_logits = {view: cache[f"f3_{view}"] for view in ("original", "foreground", "same_swap", "cross_swap")}; targets = cache["target"].tolist(); donors = cache["cross_donor_target"].tolist(); paths = ordered_records.image_path.tolist(); groups = ordered_records.group_id.tolist()
+        else:
+            models = [load_checkpoint(Path(pair[name]), torch.device("cuda" if torch.cuda.is_available() else "cpu"))[0] for name in ("f1", "f3")]; device = torch.device("cuda" if torch.cuda.is_available() else "cpu"); logits = {name: {view: [] for view in ("original", "foreground", "same_swap", "cross_swap")} for name in ("f1", "f3")}; targets = []; donors = []; paths = []; groups = []
+            with torch.no_grad():
+                for original, foreground, same, cross, target, donor, path, group in loader:
+                    for model_name, model in zip(("f1", "f3"), models):
+                        for view_name, image in (("original", original), ("foreground", foreground), ("same_swap", same), ("cross_swap", cross)):
+                            logits[model_name][view_name].append(predict(model, image.to(device)).cpu().numpy())
+                    targets.extend(target.tolist()); donors.extend(donor.tolist()); paths.extend(path); groups.extend(group)
+            f1_logits = {view: np.concatenate(logits["f1"][view]) for view in logits["f1"]}; f3_logits = {view: np.concatenate(logits["f3"][view]) for view in logits["f3"]}; np.savez_compressed(cache_path, **{f"f1_{view}": value.astype(np.float32) for view, value in f1_logits.items()}, **{f"f3_{view}": value.astype(np.float32) for view, value in f3_logits.items()}, target=np.asarray(targets, dtype=np.int64), cross_donor_target=np.asarray(donors, dtype=np.int64))
         frame = pd.DataFrame({"seed": seed, "image_path": paths, "group_id": groups, "target": targets, "cross_donor_target": donors}); frame["species_id"] = frame.image_path.map(records.set_index("image_path").species_id.astype(str)); f1o = f1_logits["original"]; f3o = f3_logits["original"]; frame["f1_prediction"] = f1o.argmax(1); frame["f3_prediction"] = f3o.argmax(1); frame["cross_prediction"] = f1_logits["cross_swap"].argmax(1); frame["f3_cross_prediction"] = f3_logits["cross_swap"].argmax(1); frame["original_agreement"] = frame.f1_prediction.eq(frame.f3_prediction); frame["dar_flip"] = frame.cross_prediction.eq(frame.cross_donor_target); scores = score_arrays(f1o, f3o, int(seed)); risk_columns = {}
         for name, score in scores.items():
             result, curves, events = evaluate_score(frame, name, score, class_ids, tier_map, list(map(float, cfg["coverage_levels"])), float(cfg["review_fraction"])); detection_rows.append({"seed": seed, "score": name, **result}); curve_rows.extend([{**row, "seed": seed} for row in curves]); risk_columns[f"risk_{name}"] = score
         frame.assign(**risk_columns).to_csv(output_root / f"seed_{seed}_per_image.csv", index=False)
         bootstrap[str(seed)] = bootstrap_pair(frame, scores["js_divergence"], scores["f1_msp"], int(cfg["bootstrap_replicates"]), int(cfg["bootstrap_seed"]))
-        del models
+        if "models" in locals(): del models
     pd.DataFrame(detection_rows).to_json(output_root / "detection_metrics.json", orient="records", indent=2); pd.DataFrame(curve_rows).to_csv(output_root / "risk_coverage.csv", index=False); atomic_json_dump({"schema_version": "cxt_select_bootstrap_v1", "results": bootstrap, "official_test_accessed": False, "internal_test_accessed": False, "outer_folds_accessed": False}, output_root / "bootstrap.json", overwrite=True); atomic_json_dump({"seeds": cfg["seeds"], "records": len(records), "checkpoint_config_sha256": sha256(Path(args.config)), "current_val_exploratory_only": True, "official_test_accessed": False}, output_root / "metadata.json", overwrite=True); print(json.dumps({"seeds": cfg["seeds"], "records": len(records), "output": str(output_root), "official_test_accessed": False}, indent=2))
 
 
