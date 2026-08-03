@@ -1,5 +1,7 @@
 param(
-    [int]$Seed = 3407
+    [int]$Seed = 3407,
+    [ValidateSet('first', 'second')]
+    [string]$Batch = 'first'
 )
 
 $ErrorActionPreference = 'Stop'
@@ -8,13 +10,24 @@ $python = Join-Path $root '.venv\Scripts\python.exe'
 $logRoot = Join-Path $root 'logs\final_outer'
 New-Item -ItemType Directory -Force $logRoot | Out-Null
 
-$queue = @(
-    @{ Fold = '1'; Method = 'F1' },
-    @{ Fold = '2'; Method = 'F0' },
-    @{ Fold = '2'; Method = 'F1' },
-    @{ Fold = '3'; Method = 'F0' },
-    @{ Fold = '3'; Method = 'F1' }
-)
+$queue = if ($Batch -eq 'first') {
+    @(
+        @{ Fold = '1'; Method = 'F1' },
+        @{ Fold = '2'; Method = 'F0' },
+        @{ Fold = '2'; Method = 'F1' },
+        @{ Fold = '3'; Method = 'F0' },
+        @{ Fold = '3'; Method = 'F1' }
+    )
+} else {
+    @(
+        @{ Fold = '1'; Method = 'F0' },
+        @{ Fold = '1'; Method = 'F1' },
+        @{ Fold = '2'; Method = 'F0' },
+        @{ Fold = '2'; Method = 'F1' },
+        @{ Fold = '3'; Method = 'F0' },
+        @{ Fold = '3'; Method = 'F1' }
+    )
+}
 
 foreach ($item in $queue) {
     $name = "fold$($item.Fold)_$($item.Method)_seed$Seed"
@@ -36,4 +49,4 @@ foreach ($item in $queue) {
     Write-Host "[$name] complete"
 }
 
-Write-Host 'Five-cell outer queue complete.'
+Write-Host "$Batch outer queue complete."
