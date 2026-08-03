@@ -1,0 +1,48 @@
+# Final frozen outer validation protocol. No method or hyperparameter search is allowed.
+protocol_version: cxt_fish_outer_validation_v1
+parent_commit: d387b858983dccef57d8a3eea93f274b69c4e133
+class_ids_path: splits/f4k16t_class_ids.json
+track_level_dev_path: splits/f4k16t_track_level_dev.csv
+outer_folds_path: splits/f4k16t_outer_3fold.json
+context_swap_manifest_path: splits/f4k16t_phase1c_context_swap_val.manifest.json
+class_ids_sha256: 75fc443707303d902d0e92d17ef93cff587a3bb4b16179537bd2aba5e44affe6
+track_level_dev_sha256: 556650e75c641ae696f14345687a15a1afe67fe53ef9d1422db9db98adfed790
+outer_folds_sha256: 7bd0e25b30ddca42589ef33a9acb29131fb70396d8ba16357881b719ea093521
+context_swap_manifest_sha256: 4ae63a6cd2bcdd7ff7e310b8bdfa82d29351fa460b959803277d51cf51be86c7
+methods:
+  - id: F0
+    description: track-uniform sampling plus original-RGB CE
+    sampler: s1_track_uniform
+    foreground_ce_weight: 0.0
+  - id: F1
+    description: track-uniform sampling plus foreground-sufficiency CE
+    sampler: s1_track_uniform
+    foreground_ce_weight: 1.0
+backbone: resnet18
+initialization: ImageNet
+image_size: 224
+epochs: 40
+early_stopping_patience: 7
+optimizer: AdamW
+learning_rate: 0.0003
+weight_decay: 0.0001
+amp: true
+seeds: [3407, 2026, 17]
+outer_folds: 3
+development_selection: fixed_track_disjoint_split_inside_outer_train
+metrics:
+  primary: [macro_f1, tail_f1, track_balanced_accuracy]
+  secondary: [balanced_accuracy, foreground_macro_f1, same_class_swap_macro_f1, cross_class_swap_macro_f1, dar, dar_flip, prediction_agreement]
+  uncertainty: paired_group_bootstrap_95ci
+access_policy:
+  current_validation_used_for_method_development: true
+  internal_test_accessed: false
+  official_test_accessed: false
+  outer_folds_accessed_before_this_freeze: false
+  outer_test_may_be_read_after_freeze_only: true
+prohibitions:
+  - no_new_methods
+  - no_hyperparameter_search
+  - no_seed_selection_after_results
+  - no_checkpoint_selection_using_outer_test
+  - no_overwrite_of_frozen_phase_results
