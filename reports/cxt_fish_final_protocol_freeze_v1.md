@@ -39,14 +39,21 @@ Run only the following 18 cells:
 ```
 
 For each fold, the outer-test trajectories are held out. A fixed
-track-disjoint development subset is created inside outer-train and is shared
-by F0 and F1. Early stopping is allowed only on that inner development subset.
+species-stratified, track-disjoint development subset is created inside
+outer-train and is shared by F0 and F1. Every one of the 16 classes must occur
+in both outer-train and inner-dev. Early stopping is allowed only on that inner
+development subset.
 The outer-test trajectories are read exactly once after training and are never
 used for checkpoint or configuration selection.
 
 The complete configuration is in
 `configs/cxt_fish_outer_validation_v1.yaml`. The referenced split and manifest
 hashes are recorded there and must match before any outer inference.
+
+Context-swap evaluation uses a separate manifest for each outer-test fold.
+Recipients and donors come only from that fold's outer-test records; no
+outer-train or inner-dev record can enter a swap manifest. Unsupported donor
+cases are retained explicitly rather than filled from another partition.
 
 Primary metrics are macro-F1, tail-F1 and track-balanced accuracy. Secondary
 metrics are balanced accuracy, foreground macro-F1, same-class and cross-class

@@ -21,6 +21,7 @@ def main() -> None:
     cfg = yaml.safe_load(CONFIG.read_text(encoding="utf-8"))
     expected = {
         "class_ids_path": "class_ids_sha256",
+        "metadata_path": "metadata_sha256",
         "track_level_dev_path": "track_level_dev_sha256",
         "outer_folds_path": "outer_folds_sha256",
         "context_swap_manifest_path": "context_swap_manifest_sha256",
@@ -67,7 +68,7 @@ def main() -> None:
         "development_splits": {str(k): int(v) for k, v in split.groupby("split").size().items()},
         "outer_fold_group_counts": [len(fold) for fold in folds],
         "training_started": False,
-        "internal_test_accessed": False,
+        "internal_test_accessed_before_outer_confirmation": False,
         "official_test_accessed": False,
     }, indent=2))
 

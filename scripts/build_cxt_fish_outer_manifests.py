@@ -19,7 +19,9 @@ def stable_key(seed: int, fold: str, group_id: str) -> str:
 
 def main() -> None:
     cfg = yaml.safe_load(CONFIG.read_text(encoding="utf-8"))
-    records = pd.read_csv(ROOT / cfg["track_level_dev_path"])
+    split_records = pd.read_csv(ROOT / cfg["track_level_dev_path"])
+    metadata = pd.read_csv(ROOT / cfg["metadata_path"])
+    records = metadata.merge(split_records[["image_path", "split"]], on="image_path", validate="one_to_one")
     outer = json.loads((ROOT / cfg["outer_folds_path"]).read_text(encoding="utf-8"))
     output_root = ROOT / cfg["outer_manifest_output_root"]
     output_root.mkdir(parents=True, exist_ok=True)
@@ -35,9 +37,14 @@ def main() -> None:
         if test_groups - all_groups:
             raise ValueError(f"Fold {fold} contains unknown groups.")
         train_groups = all_groups - test_groups
-        ordered = sorted(train_groups, key=lambda group: stable_key(seed, fold, group))
-        dev_count = max(1, round(len(ordered) * fraction))
-        dev_groups = set(ordered[:dev_count])
+        dev_groups: set[str] = set()
+        source = records[records["group_id"].astype(str).isin(train_groups)]
+        for species, species_frame in source.groupby("species_id", sort=True):
+            species_groups = sorted(set(species_frame["group_id"].astype(str)), key=lambda group: stable_key(seed, f"{fold}:{species}", group))
+            if len(species_groups) < 2:
+                raise ValueError(f"Fold {fold}, species {species} has fewer than two outer-train trajectories.")
+            dev_count = min(max(1, round(len(species_groups) * fraction)), len(species_groups) - 1)
+            dev_groups.update(species_groups[:dev_count])
         fit_groups = train_groups - dev_groups
         if not fit_groups or not dev_groups:
             raise ValueError(f"Fold {fold} has an empty inner split.")

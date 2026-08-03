@@ -169,6 +169,11 @@ def main() -> None:
     class_ids = sorted(set(train_records.species_id.astype(str)) | set(dev_records.species_id.astype(str)))
     if len(class_ids) != 16:
         raise ValueError("Frozen outer protocol requires all 16 classes.")
+    expected_classes = set(class_ids)
+    if set(train_records.species_id.astype(str)) != expected_classes:
+        raise ValueError("Outer-train is missing at least one frozen class.")
+    if set(dev_records.species_id.astype(str)) != expected_classes:
+        raise ValueError("Inner-dev is missing at least one frozen class.")
     image_size = int(cfg["image_size"])
     if args.method == "F1":
         train_set = Phase1CDataset(
