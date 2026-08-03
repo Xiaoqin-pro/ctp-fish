@@ -53,6 +53,9 @@ def main() -> None:
             "outer_test": records[group_series.isin(test_groups)],
         }
         for name, frame in subsets.items():
+            frame = frame.copy()
+            frame["source_split"] = frame["split"]
+            frame["split"] = "train" if name == "outer_train" else ("val" if name == "inner_dev" else "test")
             frame.sort_values(["group_id", "image_path"]).to_csv(fold_root / f"{name}.csv", index=False)
         manifest["folds"][str(fold)] = {
             "outer_train_groups": len(fit_groups),

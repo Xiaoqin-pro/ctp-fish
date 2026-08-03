@@ -19,10 +19,12 @@ CXT-Select are closed negative extensions and cannot be revived or tuned.
 ## Frozen evidence boundary
 
 The current track-level validation results are development evidence. They were
-used to select and freeze F1 before this document. The internal test and
-official test remain locked. The three-fold outer manifest is now authorized
-only for the fixed confirmation described below; it must not be used to change
-the method, seed list, checkpoint rule or metrics.
+used to select and freeze F1 before this document. The official test remains
+locked. The previously named internal-test trajectories are released only as
+part of the fixed outer confirmation below: they are assigned by the frozen
+outer manifest and are never used for checkpoint or configuration selection.
+They were not accessed before this freeze. The outer manifest must not be used
+to change the method, seed list, checkpoint rule or metrics.
 
 The CXT-Select negative evaluation was frozen at commit
 `d387b858983dccef57d8a3eea93f274b69c4e133`. No locked partition was accessed

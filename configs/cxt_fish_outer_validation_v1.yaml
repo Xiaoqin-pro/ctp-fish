@@ -38,7 +38,8 @@ metrics:
   uncertainty: paired_group_bootstrap_95ci
 access_policy:
   current_validation_used_for_method_development: true
-  internal_test_accessed: false
+  internal_test_accessed_before_outer_confirmation: false
+  internal_test_released_for_outer_confirmation: true
   official_test_accessed: false
   outer_folds_accessed_before_this_freeze: false
   outer_test_may_be_read_after_freeze_only: true

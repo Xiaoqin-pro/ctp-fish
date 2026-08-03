@@ -217,7 +217,7 @@ def main() -> None:
         payload = {
             "model": model.state_dict(), "optimizer": optimizer.state_dict(), "scheduler": scheduler.state_dict(), "scaler": scaler.state_dict(),
             "history": history, "epoch": epoch, "best_inner_dev_accuracy": best, "fold": args.fold, "method": args.method, "seed": args.seed,
-            "config_sha256": sha256(ROOT / args.config), "outer_test_accessed": False, "internal_test_accessed": False, "official_test_accessed": False,
+            "config_sha256": sha256(ROOT / args.config), "outer_test_accessed": False, "internal_test_accessed_before_outer_confirmation": False, "official_test_accessed": False,
             "rng_state": capture_rng(),
         }
         if dev_accuracy > best:
@@ -227,7 +227,7 @@ def main() -> None:
         atomic_save(payload, output / "last.pt")
         pd.DataFrame(history).to_csv(output / "training_curve.csv", index=False)
         print(json.dumps(row))
-    (output / "run_metadata.json").write_text(json.dumps({"fold": args.fold, "method": args.method, "seed": args.seed, "outer_test_accessed": False, "internal_test_accessed": False, "official_test_accessed": False, "config_sha256": sha256(ROOT / args.config)}, indent=2), encoding="utf-8")
+    (output / "run_metadata.json").write_text(json.dumps({"fold": args.fold, "method": args.method, "seed": args.seed, "outer_test_accessed": False, "internal_test_accessed_before_outer_confirmation": False, "official_test_accessed": False, "config_sha256": sha256(ROOT / args.config)}, indent=2), encoding="utf-8")
 
 
 if __name__ == "__main__":
