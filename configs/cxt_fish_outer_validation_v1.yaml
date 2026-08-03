@@ -29,6 +29,8 @@ weight_decay: 0.0001
 amp: true
 seeds: [3407, 2026, 17]
 outer_folds: 3
+inner_dev_fraction: 0.15
+outer_manifest_output_root: outputs/cxt_fish/final_outer_manifests
 development_selection: fixed_track_disjoint_split_inside_outer_train
 metrics:
   primary: [macro_f1, tail_f1, track_balanced_accuracy]
