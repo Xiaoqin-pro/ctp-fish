@@ -54,3 +54,18 @@ class DLEDataset(Dataset):
         foreground = foreground_blur_view(image, mask, **self.kwargs)
         original, foreground, mask_tensor = self.transform(image, foreground, mask)
         return original, foreground, mask_tensor, self.class_to_index[str(row.species_id)], str(row.image_path), str(row.group_id)
+
+
+class DLEValDataset(Dataset):
+    def __init__(self, records: pd.DataFrame, class_ids: list[str], image_size: int) -> None:
+        self.records = records.reset_index(drop=True).copy(); self.class_to_index = {label: index for index, label in enumerate(class_ids)}; self.image_size = image_size
+
+    def __len__(self) -> int: return len(self.records)
+
+    def __getitem__(self, index: int):
+        row = self.records.iloc[index]
+        image = Image.open(Path(row.image_path)).convert("RGB")
+        mask = Image.open(Path(row.mask_path)).convert("L")
+        image = TF.center_crop(TF.resize(image, 256), (self.image_size, self.image_size))
+        mask = TF.center_crop(TF.resize(mask, 256, Image.Resampling.NEAREST), (self.image_size, self.image_size))
+        return TF.normalize(TF.to_tensor(image), MEAN, STD), TF.to_tensor(mask).clamp(0.0, 1.0), self.class_to_index[str(row.species_id)], str(row.image_path), str(row.group_id)
