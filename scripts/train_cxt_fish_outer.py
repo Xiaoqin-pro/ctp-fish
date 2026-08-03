@@ -201,11 +201,12 @@ def main() -> None:
         model.load_state_dict(state["model"]); optimizer.load_state_dict(state["optimizer"])
         scheduler.load_state_dict(state["scheduler"]); scaler.load_state_dict(state["scaler"])
         history, best, start = state["history"], float(state["best_inner_dev_accuracy"]), int(state["epoch"]) + 1
+        patience = int(state.get("patience", 0))
         restore_rng(state["rng_state"])
     else:
         if output.exists() and any(output.iterdir()):
             raise FileExistsError(f"Refusing to overwrite {output}")
-        history, best, start = [], -1.0, 1
+        history, best, start, patience = [], -1.0, 1, 0
     output.mkdir(parents=True, exist_ok=True)
     for epoch in range(start, int(cfg["epochs"]) + 1):
         sampler.set_epoch(epoch)
@@ -216,17 +217,23 @@ def main() -> None:
         history.append(row)
         payload = {
             "model": model.state_dict(), "optimizer": optimizer.state_dict(), "scheduler": scheduler.state_dict(), "scaler": scaler.state_dict(),
-            "history": history, "epoch": epoch, "best_inner_dev_accuracy": best, "fold": args.fold, "method": args.method, "seed": args.seed,
+            "history": history, "epoch": epoch, "best_inner_dev_accuracy": best, "patience": patience, "fold": args.fold, "method": args.method, "seed": args.seed,
             "config_sha256": sha256(ROOT / args.config), "outer_test_accessed": False, "internal_test_accessed_before_outer_confirmation": False, "official_test_accessed": False,
             "rng_state": capture_rng(),
         }
         if dev_accuracy > best:
             best = dev_accuracy
+            patience = 0
             payload["best_inner_dev_accuracy"] = best
             atomic_save({"model": model.state_dict(), "class_ids": class_ids, "epoch": epoch, "fold": args.fold, "method": args.method, "seed": args.seed, "best_inner_dev_accuracy": best, "config_sha256": payload["config_sha256"], "outer_test_accessed": False}, output / "best.pt")
+        else:
+            patience += 1
+        payload["patience"] = patience
         atomic_save(payload, output / "last.pt")
         pd.DataFrame(history).to_csv(output / "training_curve.csv", index=False)
         print(json.dumps(row))
+        if patience >= int(cfg["early_stopping_patience"]):
+            break
     (output / "run_metadata.json").write_text(json.dumps({"fold": args.fold, "method": args.method, "seed": args.seed, "outer_test_accessed": False, "internal_test_accessed_before_outer_confirmation": False, "official_test_accessed": False, "config_sha256": sha256(ROOT / args.config)}, indent=2), encoding="utf-8")
 
 
