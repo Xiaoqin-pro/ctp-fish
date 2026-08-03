@@ -54,6 +54,21 @@ def worker_init(worker_id: int, seed: int) -> None:
     np.random.seed(seed + worker_id)
 
 
+def capture_rng() -> dict:
+    state = {"python": random.getstate(), "numpy": np.random.get_state(), "torch": torch.get_rng_state()}
+    if torch.cuda.is_available():
+        state["cuda"] = torch.cuda.get_rng_state_all()
+    return state
+
+
+def restore_rng(state: dict) -> None:
+    random.setstate(state["python"])
+    np.random.set_state(state["numpy"])
+    torch.set_rng_state(state["torch"].detach().cpu().to(dtype=torch.uint8).contiguous())
+    if "cuda" in state and torch.cuda.is_available():
+        torch.cuda.set_rng_state_all([item.detach().cpu().to(dtype=torch.uint8).contiguous() for item in state["cuda"]])
+
+
 def eval_transform(size: int):
     return transforms.Compose([
         transforms.Resize(256), transforms.CenterCrop(size), transforms.ToTensor(),
@@ -186,6 +201,7 @@ def main() -> None:
         model.load_state_dict(state["model"]); optimizer.load_state_dict(state["optimizer"])
         scheduler.load_state_dict(state["scheduler"]); scaler.load_state_dict(state["scaler"])
         history, best, start = state["history"], float(state["best_inner_dev_accuracy"]), int(state["epoch"]) + 1
+        restore_rng(state["rng_state"])
     else:
         if output.exists() and any(output.iterdir()):
             raise FileExistsError(f"Refusing to overwrite {output}")
@@ -202,6 +218,7 @@ def main() -> None:
             "model": model.state_dict(), "optimizer": optimizer.state_dict(), "scheduler": scheduler.state_dict(), "scaler": scaler.state_dict(),
             "history": history, "epoch": epoch, "best_inner_dev_accuracy": best, "fold": args.fold, "method": args.method, "seed": args.seed,
             "config_sha256": sha256(ROOT / args.config), "outer_test_accessed": False, "internal_test_accessed": False, "official_test_accessed": False,
+            "rng_state": capture_rng(),
         }
         if dev_accuracy > best:
             best = dev_accuracy
