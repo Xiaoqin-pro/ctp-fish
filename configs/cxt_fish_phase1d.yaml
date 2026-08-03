@@ -1,0 +1,27 @@
+# Frozen donor-aware counterfactual pilot.  Only train/val in the existing track split may be read.
+metadata_path: outputs/gate0/audit/f4k_metadata.csv
+track_split_path: splits/f4k16t_track_level_dev.csv
+outer_folds_path: splits/f4k16t_outer_3fold.json
+image_size: 224
+batch_size: 64
+epochs: 40
+early_stopping_patience: 7
+optimizer: AdamW
+learning_rate: 0.0003
+weight_decay: 0.0001
+amp: true
+pilot_seed: 3407
+pair_seed: 3407
+foreground_ce_weight: 1.0
+swap_ce_weight: 1.0
+donor_suppression_weight: 0.1
+donor_margin: 0.0
+foreground_blur_kernel: 21
+foreground_blur_sigma: 5.0
+mask_feather_radius: 3
+donor_mask_dilation_iterations: 1
+donor_inpaint_radius: 3.0
+locked_partitions:
+  training: train
+  evaluation: val
+  prohibited: [test, outer_folds]

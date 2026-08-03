@@ -1,0 +1,11 @@
+{
+  "schema_version": "cxt_fish_phase1c_swap_v1",
+  "manifest_path": "splits\\f4k16t_phase1c_context_swap_val.csv",
+  "manifest_sha256": "efacaed64e99b25aaa04e8f662d09c9e43a2b8a0a95bf7aa1e190a059e477448",
+  "rows": 8248,
+  "unique_recipients": 4124,
+  "seed": 3407,
+  "view_construction": "recipient-mask feathered foreground + donor RGB background; resize and compose before normalization",
+  "internal_test_accessed": false,
+  "outer_folds_accessed": false
+}
