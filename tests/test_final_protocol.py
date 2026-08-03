@@ -34,3 +34,14 @@ def test_outer_manifest_builder_is_deterministic():
         text=True,
     )
     assert first.stdout == second.stdout
+
+
+def test_outer_training_dry_run_never_loads_outer_test():
+    result = subprocess.run(
+        [sys.executable, "scripts/train_cxt_fish_outer.py", "--fold", "1", "--method", "F1", "--seed", "3407", "--dry-run"],
+        cwd=ROOT,
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    assert '"outer_test_loaded": false' in result.stdout
