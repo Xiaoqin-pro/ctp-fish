@@ -12,7 +12,7 @@ foreach ($fold in @(1, 2, 3)) {
             $script = Join-Path $root 'scripts\train_cxt_fish_mask_contrastive_outer.py'
             $args = @('--config', 'configs/cxt_fish_mask_contrastive_outer_v1.yaml', '--fold', "$fold", '--seed', "$seed")
         } else {
-            $script = Join-Path $root 'scripts\evaluate_cxt_fish_clib_style_outer.py'
+            $script = Join-Path $root 'scripts\evaluate_cxt_fish_mask_contrastive_outer.py'
             $args = @('--config', 'configs/cxt_fish_mask_contrastive_outer_v1.yaml', '--fold', "$fold", '--seed', "$seed", '--output-root', 'outputs/cxt_fish/mask_contrastive_outer_v1_evaluation')
         }
         $stamp = "fold_${fold}_seed${seed}"; $log = Join-Path $logDir "${Mode}_${stamp}.log"

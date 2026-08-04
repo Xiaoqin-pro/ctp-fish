@@ -9,10 +9,10 @@ CXT-Fish method variant.
 For every outer-train image, the official binary mask creates three views:
 
 1. `original`: unchanged RGB;
-2. `foreground_subject`: retain the annotated primary fish and fill all
-   non-primary pixels with RGB value 128;
-3. `non_primary_context`: retain the non-primary region and fill annotated
-   fish pixels with RGB value 128.
+2. `foreground_subject`: the same feathered-mask Gaussian-blur construction
+   used by CXT-Fish (`kernel=21`, `sigma=5`, `feather_radius=3`);
+3. `non_primary_context`: the exact complementary feathered-mask blur, so the
+   non-primary region is retained and the annotated fish region is blurred.
 
 All three views receive the same random crop, flip and color-jitter parameters
 so that the mask semantics remain aligned. The mask is used only during

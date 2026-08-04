@@ -32,6 +32,16 @@ def foreground_blur_view(image: Image.Image, mask: Image.Image, *, blur_kernel: 
     return Image.fromarray(np.round(alpha * rgb + (1.0 - alpha) * blurred).astype(np.uint8))
 
 
+def non_primary_blur_view(image: Image.Image, mask: Image.Image, *, blur_kernel: int, blur_sigma: float, feather_radius: int) -> Image.Image:
+    """Keep non-primary pixels and blur the annotated primary fish region."""
+    if blur_kernel < 3 or blur_kernel % 2 == 0:
+        raise ValueError("blur_kernel must be an odd integer >= 3")
+    rgb = np.asarray(image.convert("RGB"), dtype=np.uint8)
+    blurred = cv2.GaussianBlur(rgb, (blur_kernel, blur_kernel), sigmaX=blur_sigma, sigmaY=blur_sigma)
+    alpha = feathered_mask(mask, (rgb.shape[1], rgb.shape[0]), feather_radius)[..., None]
+    return Image.fromarray(np.round((1.0 - alpha) * rgb + alpha * blurred).astype(np.uint8))
+
+
 def context_swap_view(recipient: Image.Image, recipient_mask: Image.Image, donor: Image.Image, *, feather_radius: int) -> Image.Image:
     """Keep recipient fish and use donor RGB as background, on the recipient canvas before normalization."""
     target = np.asarray(recipient.convert("RGB"), dtype=np.uint8)

@@ -42,9 +42,11 @@ classifier_augmentation:
 views:
   construction: official_mask_guided
   order: [original, foreground_subject, non_primary_context]
-  foreground_variant: constant_fill_background
-  non_primary_variant: background_only
-  fill_value: 128
+  foreground_variant: cxt_foreground_blur
+  non_primary_variant: complementary_subject_blur
+  blur_kernel: 21
+  blur_sigma: 5.0
+  feather_radius: 3
   mask_resampling: nearest
   mask_used_for_training_views: true
 contrastive:

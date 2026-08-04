@@ -11,7 +11,7 @@ from torch.utils.data import Dataset
 from torchvision.transforms import ColorJitter, functional as TF
 from torchvision.transforms import RandomResizedCrop
 
-from datasets.mask_variants import apply_mask_variant
+from datasets.context_views import foreground_blur_view, non_primary_blur_view
 
 
 MEAN, STD = [.485, .456, .406], [.229, .224, .225]
@@ -40,11 +40,11 @@ class MaskContrastiveTransform:
 
 
 class MaskContrastiveDataset(Dataset):
-    def __init__(self, records: pd.DataFrame, transform: MaskContrastiveTransform, class_ids: list[str], fill_value: int = 128) -> None:
+    def __init__(self, records: pd.DataFrame, transform: MaskContrastiveTransform, class_ids: list[str], *, blur_kernel: int = 21, blur_sigma: float = 5.0, feather_radius: int = 3) -> None:
         self.records = records.reset_index(drop=True).copy()
         self.transform = transform
         self.class_to_index = {str(label): index for index, label in enumerate(class_ids)}
-        self.fill_value = int(fill_value)
+        self.blur_kwargs = {"blur_kernel": int(blur_kernel), "blur_sigma": float(blur_sigma), "feather_radius": int(feather_radius)}
         if set(self.records.get("split", pd.Series(["train"] * len(self.records))).astype(str)) - {"train"}:
             raise ValueError("Mask contrastive training dataset accepts train records only")
 
@@ -55,7 +55,7 @@ class MaskContrastiveDataset(Dataset):
         row = self.records.iloc[index]
         image = Image.open(Path(row.image_path)).convert("RGB")
         mask = Image.open(Path(row.mask_path)).convert("L")
-        foreground = apply_mask_variant(image, mask, "foreground_only", fill=self.fill_value)
-        non_primary = apply_mask_variant(image, mask, "background_only", fill=self.fill_value)
+        foreground = foreground_blur_view(image, mask, **self.blur_kwargs)
+        non_primary = non_primary_blur_view(image, mask, **self.blur_kwargs)
         original, foreground, non_primary = self.transform(image, foreground, non_primary)
         return original, foreground, non_primary, self.class_to_index[str(row.species_id)], str(row.image_path), str(row.group_id)
