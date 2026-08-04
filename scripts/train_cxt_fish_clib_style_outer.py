@@ -42,6 +42,15 @@ def sha256(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
+def state_dict_sha256(state_dict: dict) -> str:
+    digest = hashlib.sha256()
+    for name in sorted(state_dict):
+        value = state_dict[name].detach().cpu().contiguous()
+        digest.update(name.encode("utf-8")); digest.update(str(value.dtype).encode("ascii"))
+        digest.update(str(tuple(value.shape)).encode("ascii")); digest.update(value.numpy().tobytes())
+    return digest.hexdigest()
+
+
 def atomic_save(payload: dict, path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     with tempfile.NamedTemporaryFile(delete=False, dir=path.parent, suffix=".tmp") as handle:
@@ -120,6 +129,11 @@ def main() -> None:
     class_ids = sorted(set(train_records.species_id.astype(str)) | set(dev_records.species_id.astype(str)))
     if len(class_ids) != 16 or set(train_records.species_id.astype(str)) != set(class_ids) or set(dev_records.species_id.astype(str)) != set(class_ids):
         raise ValueError("Both outer-train and inner-dev must contain all 16 frozen classes.")
+    for relative, expected in cfg["frozen_asset_sha256"].items():
+        asset = {"class_ids": cfg["class_ids_path"], "metadata": cfg["metadata_path"], "outer_folds": cfg["outer_folds_path"]}[relative]
+        actual = sha256(ROOT / asset)
+        if actual != expected:
+            raise ValueError(f"Frozen asset hash mismatch for {relative}: {actual} != {expected}")
 
     image_size = int(cfg["image_size"])
     train_set = CLIBStyleDataset(train_records, train_transform(image_size), float(cfg["views"]["ratio"]), class_ids)
@@ -130,6 +144,8 @@ def main() -> None:
     train_loader = DataLoader(train_set, batch_size=int(cfg["training"]["batch_size"]), sampler=sampler, **common)
     dev_loader = DataLoader(dev_set, batch_size=int(cfg["training"]["batch_size"]), shuffle=False, **common)
     model = ResNet18Contrastive(len(class_ids)).to(device)
+    initialization_sha = state_dict_sha256(model.state_dict())
+    view_schema_sha = sha256(ROOT / "datasets" / "clib_style_views.py")
     amp = bool(cfg["training"]["amp"]) and device.type == "cuda"
     scaler = torch.amp.GradScaler(device.type, enabled=amp)
     pretrain_optimizer = AdamW(model.parameters(), lr=float(cfg["training"]["learning_rate"]), weight_decay=float(cfg["training"]["weight_decay"]))
@@ -173,7 +189,7 @@ def main() -> None:
         dev_loss, dev_accuracy = validate(model, dev_loader, device, amp)
         row = {"stage": "classifier", "epoch": epoch, "train_ce": loss_sum / max(1, batches), "inner_dev_loss": dev_loss, "inner_dev_accuracy": dev_accuracy, "batches": batches}
         history.append(row); print(json.dumps(row))
-        state = {"model": model.state_dict(), "class_ids": class_ids, "fold": args.fold, "seed": args.seed, "epoch": epoch, "stage": "classifier", "history": history, "best_inner_dev_accuracy": best, "config_sha256": sha256(cfg_path), "outer_test_accessed": False, "official_test_accessed": False}
+        state = {"model": model.state_dict(), "class_ids": class_ids, "fold": args.fold, "seed": args.seed, "epoch": epoch, "stage": "classifier", "history": history, "best_inner_dev_accuracy": best, "config_sha256": sha256(cfg_path), "outer_train_sha256": sha256(train_path), "inner_dev_sha256": sha256(dev_path), "initialization_sha256": initialization_sha, "view_schema_sha256": view_schema_sha, "outer_test_accessed": False, "official_test_accessed": False}
         if dev_accuracy > best:
             best, patience = dev_accuracy, 0; state["best_inner_dev_accuracy"] = best; atomic_save(state, output / "best.pt")
         else:
@@ -182,7 +198,7 @@ def main() -> None:
         pd.DataFrame(history).to_csv(output / "training_curve.csv", index=False)
         if patience >= 7:
             break
-    (output / "run_metadata.json").write_text(json.dumps({"fold": args.fold, "seed": args.seed, "config_sha256": sha256(cfg_path), "outer_test_accessed": False, "official_test_accessed": False, "checkpoint_selection": "inner_dev_accuracy_with_patience_7"}, indent=2), encoding="utf-8")
+    (output / "run_metadata.json").write_text(json.dumps({"fold": args.fold, "seed": args.seed, "config_sha256": sha256(cfg_path), "outer_train_sha256": sha256(train_path), "inner_dev_sha256": sha256(dev_path), "initialization_sha256": initialization_sha, "view_schema_sha256": view_schema_sha, "outer_test_accessed": False, "official_test_accessed": False, "checkpoint_selection": "inner_dev_accuracy_with_patience_7"}, indent=2), encoding="utf-8")
 
 
 if __name__ == "__main__":

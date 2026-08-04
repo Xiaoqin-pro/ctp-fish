@@ -41,3 +41,10 @@ def test_clib_style_run_matrix_is_exactly_nine_cells():
     assert len(cfg["seeds"]) * int(cfg["outer_folds"]) == 9
     assert cfg["evaluation"]["bootstrap_replicates"] == 1000
     assert "cross_class_swap_macro_f1" in cfg["evaluation"]["metrics"]
+
+
+def test_clib_style_driver_records_frozen_provenance():
+    driver = (ROOT / "scripts" / "train_cxt_fish_clib_style_outer.py").read_text(encoding="utf-8")
+    for field in ("initialization_sha256", "outer_train_sha256", "inner_dev_sha256", "view_schema_sha256"):
+        assert field in driver
+    assert "outer_test_loaded" in driver
