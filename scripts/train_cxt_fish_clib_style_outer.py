@@ -168,7 +168,7 @@ def main() -> None:
             scaler.scale(loss).backward(); scaler.step(pretrain_optimizer); scaler.update()
             loss_sum += float(loss.detach()); batches += 1
         history.append({"stage": "pretrain", "epoch": epoch, "contrastive_loss": loss_sum / max(1, batches), "batches": batches})
-        print(json.dumps(history[-1]))
+        print(json.dumps(history[-1]), flush=True)
     for parameter in model.encoder.parameters():
         parameter.requires_grad_(False)
     model.encoder.eval()
@@ -188,7 +188,7 @@ def main() -> None:
             loss.backward(); classifier_optimizer.step(); loss_sum += float(loss.detach()); batches += 1
         dev_loss, dev_accuracy = validate(model, dev_loader, device, amp)
         row = {"stage": "classifier", "epoch": epoch, "train_ce": loss_sum / max(1, batches), "inner_dev_loss": dev_loss, "inner_dev_accuracy": dev_accuracy, "batches": batches}
-        history.append(row); print(json.dumps(row))
+        history.append(row); print(json.dumps(row), flush=True)
         state = {"model": model.state_dict(), "class_ids": class_ids, "fold": args.fold, "seed": args.seed, "epoch": epoch, "stage": "classifier", "history": history, "best_inner_dev_accuracy": best, "config_sha256": sha256(cfg_path), "outer_train_sha256": sha256(train_path), "inner_dev_sha256": sha256(dev_path), "initialization_sha256": initialization_sha, "view_schema_sha256": view_schema_sha, "outer_test_accessed": False, "official_test_accessed": False}
         if dev_accuracy > best:
             best, patience = dev_accuracy, 0; state["best_inner_dev_accuracy"] = best; atomic_save(state, output / "best.pt")
