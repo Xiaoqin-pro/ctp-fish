@@ -6,6 +6,7 @@ class_ids_path: splits/f4k16t_class_ids.json
 metadata_path: outputs/gate0/audit/f4k_metadata.csv
 outer_folds_path: splits/f4k16t_outer_3fold.json
 outer_manifest_root: outputs/cxt_fish/final_outer_manifests
+output_root: outputs/cxt_fish/clib_style_outer
 frozen_asset_sha256:
   class_ids: 75fc443707303d902d0e92d17ef93cff587a3bb4b16179537bd2aba5e44affe6
   metadata: 91f15fd61c5b2e398264a25bf008d54804b2045bddc0cdd9851b84f0eead0221
@@ -27,6 +28,8 @@ training:
   learning_rate: 0.0003
   weight_decay: 0.0001
   amp: true
+  batch_size: 64
+  num_workers: 2
 views:
   construction: paper_faithful_clib_style
   subject: center_crop
