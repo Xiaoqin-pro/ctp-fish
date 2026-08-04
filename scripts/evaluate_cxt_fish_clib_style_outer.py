@@ -21,10 +21,10 @@ ROOT = Path(__file__).resolve().parents[1]
 
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--config", default="configs/cxt_fish_clib_style_outer_v1.yaml")
+    parser.add_argument("--config", default="configs/cxt_fish_clib_style_outer_v1_1.yaml")
     parser.add_argument("--fold", choices=["1", "2", "3"], required=True)
     parser.add_argument("--seed", type=int, choices=[3407, 2026, 17], required=True)
-    parser.add_argument("--output-root", default="outputs/cxt_fish/clib_style_outer_evaluation")
+    parser.add_argument("--output-root", default="outputs/cxt_fish/clib_style_outer_v1_1_evaluation")
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args()
     cfg_path = ROOT / args.config
@@ -59,7 +59,7 @@ def main() -> None:
     state = torch.load(checkpoint, map_location="cpu", weights_only=False)
     class_ids = [str(value) for value in state["class_ids"]]
     model = ResNet18Contrastive(len(class_ids))
-    model.load_state_dict(state["model"], strict=False)
+    model.load_state_dict(state["model"], strict=True)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model.to(device).eval()
     train_records = pd.read_csv(fold_root / "outer_train.csv")

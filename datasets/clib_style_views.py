@@ -10,7 +10,7 @@ from __future__ import annotations
 from PIL import Image
 
 
-SCHEMA_VERSION = "clib_style_views_v1"
+SCHEMA_VERSION = "clib_style_views_v1_1_deterministic_interpretation"
 
 
 def _crop_box(width: int, height: int, ratio: float, left: int, top: int) -> tuple[int, int, int, int]:
@@ -31,6 +31,25 @@ def center_subject_view(image: Image.Image, ratio: float = 0.25) -> Image.Image:
     top = max(0, (height - crop_h) // 2)
     return source.crop(_crop_box(width, height, ratio, left, top)).resize(
         (width, height), Image.Resampling.BILINEAR
+    )
+
+
+def subject_box(image: Image.Image, ratio: float = 0.25) -> tuple[int, int, int, int]:
+    """Return the fixed central crop box used by :func:`center_subject_view`."""
+    width, height = image.convert("RGB").size
+    crop_w = max(1, round(width * ratio)); crop_h = max(1, round(height * ratio))
+    return _crop_box(width, height, ratio, max(0, (width - crop_w) // 2), max(0, (height - crop_h) // 2))
+
+
+def corner_boxes(image: Image.Image, ratio: float = 0.25) -> tuple[tuple[int, int, int, int], ...]:
+    """Return the four source boxes used by the fixed context mosaic."""
+    width, height = image.convert("RGB").size
+    crop_w = max(1, round(width * ratio)); crop_h = max(1, round(height * ratio))
+    return (
+        _crop_box(width, height, ratio, 0, 0),
+        _crop_box(width, height, ratio, width - crop_w, 0),
+        _crop_box(width, height, ratio, 0, height - crop_h),
+        _crop_box(width, height, ratio, width - crop_w, height - crop_h),
     )
 
 

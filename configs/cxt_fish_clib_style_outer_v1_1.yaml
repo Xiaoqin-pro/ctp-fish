@@ -1,0 +1,85 @@
+# Protocol-adapted CLIB-style fairness baseline. No method or hyperparameter search.
+protocol_version: cxt_fish_clib_style_outer_v1_1
+parent_protocol: configs/cxt_fish_outer_validation_v1.yaml
+parent_commit: 16f0ab7cbbb7498ad10606401e25ef04eb340b4b
+class_ids_path: splits/f4k16t_class_ids.json
+metadata_path: outputs/gate0/audit/f4k_metadata.csv
+outer_folds_path: splits/f4k16t_outer_3fold.json
+outer_manifest_root: outputs/cxt_fish/final_outer_manifests
+output_root: outputs/cxt_fish/clib_style_outer_v1_1
+frozen_asset_sha256:
+  class_ids: 75fc443707303d902d0e92d17ef93cff587a3bb4b16179537bd2aba5e44affe6
+  metadata: 91f15fd61c5b2e398264a25bf008d54804b2045bddc0cdd9851b84f0eead0221
+  outer_folds: 7bd0e25b30ddca42589ef33a9acb29131fb70396d8ba16357881b719ea093521
+model: resnet18
+initialization: ImageNet1K_V1
+image_size: 224
+seeds: [3407, 2026, 17]
+outer_folds: 3
+inner_dev_fraction: 0.15
+checkpoint_selection: inner_dev_accuracy_with_patience_7
+outer_test_access: final_evaluation_only
+training:
+  pretrain_epochs: 40
+  classifier_epochs: 40
+  optimizer: AdamW
+  learning_rate: 0.0003
+  weight_decay: 0.0001
+  amp: true
+  batch_size: 64
+  num_workers: 2
+  scheduler: cosine_annealing_each_stage
+pretrain_augmentation:
+  random_resized_crop: true
+  crop_scale: [0.2, 1.0]
+  horizontal_flip: true
+  color_jitter: [0.1, 0.1, 0.1, 0.05]
+classifier_augmentation:
+  random_resized_crop: true
+  crop_scale: [0.08, 1.0]
+  horizontal_flip: true
+  color_jitter: [0.1, 0.1, 0.1, 0.05]
+views:
+  construction: deterministic_clib_inspired_interpretation
+  subject: center_crop
+  background: four_corner_mosaic
+  ratio: 0.25
+  ratio_semantics: retained_side_fraction_working_interpretation
+  mask_used_for_training_views: false
+  official_formula_verified: false
+contrastive:
+  temperature: 0.07
+  positive_pair: original_subject_same_sample
+  negatives: all_other_views_in_batch
+  projection_head: 512-256-relu-128-l2
+  loss: paired_subject_infonce
+classifier:
+  input: frozen_backbone_global_pool
+  loss: cross_entropy
+  foreground_or_mask_loss: false
+evaluation:
+  metrics:
+    - original_macro_f1
+    - original_tail_f1
+    - original_track_balanced_accuracy
+    - foreground_macro_f1
+    - same_class_swap_macro_f1
+    - cross_class_swap_macro_f1
+    - dar
+    - dar_flip
+    - prediction_agreement
+  uncertainty: paired_group_bootstrap_95ci
+  bootstrap_replicates: 1000
+access_policy:
+  outer_train_allowed: true
+  inner_dev_allowed_for_checkpoint_only: true
+  outer_test_allowed_after_all_training: true
+  current_validation_used_for_configuration: false
+  calibration_accessed: false
+  official_test_accessed: false
+prohibitions:
+  - no_method_or_hyperparameter_search
+  - no_outer_test_checkpoint_selection
+  - no_mask_based_training_view_construction
+  - no_new_projection_or_attention_module
+  - no_overwrite_of_cxt_fish_outputs

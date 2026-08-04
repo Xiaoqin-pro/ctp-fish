@@ -15,10 +15,10 @@ foreach ($fold in @(1, 2, 3)) {
         $stamp = "fold_${fold}_seed${seed}"
         if ($Mode -eq 'train') {
             $script = Join-Path $root 'scripts\train_cxt_fish_clib_style_outer.py'
-            $args = @('--config', 'configs/cxt_fish_clib_style_outer_v1.yaml', '--fold', "$fold", '--seed', "$seed")
+            $args = @('--config', 'configs/cxt_fish_clib_style_outer_v1_1.yaml', '--fold', "$fold", '--seed', "$seed")
         } else {
             $script = Join-Path $root 'scripts\evaluate_cxt_fish_clib_style_outer.py'
-            $args = @('--config', 'configs/cxt_fish_clib_style_outer_v1.yaml', '--fold', "$fold", '--seed', "$seed")
+            $args = @('--config', 'configs/cxt_fish_clib_style_outer_v1_1.yaml', '--fold', "$fold", '--seed', "$seed")
         }
         $log = Join-Path $logDir "${Mode}_${stamp}.log"
         Write-Host "[$Mode] $stamp"

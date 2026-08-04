@@ -5,6 +5,7 @@ import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
 CONFIG = ROOT / "configs" / "cxt_fish_clib_style_outer_v1.yaml"
+CONFIG_V11 = ROOT / "configs" / "cxt_fish_clib_style_outer_v1_1.yaml"
 
 
 def load_config():
@@ -48,3 +49,13 @@ def test_clib_style_driver_records_frozen_provenance():
     for field in ("initialization_sha256", "outer_train_sha256", "inner_dev_sha256", "view_schema_sha256"):
         assert field in driver
     assert "outer_test_loaded" in driver
+
+
+def test_clib_style_v11_is_explicitly_adapted_and_uses_two_augmentations():
+    cfg = yaml.safe_load(CONFIG_V11.read_text(encoding="utf-8"))
+    assert cfg["protocol_version"] == "cxt_fish_clib_style_outer_v1_1"
+    assert cfg["views"]["construction"] == "deterministic_clib_inspired_interpretation"
+    assert cfg["views"]["official_formula_verified"] is False
+    assert cfg["pretrain_augmentation"]["crop_scale"] == [0.2, 1.0]
+    assert cfg["classifier_augmentation"]["crop_scale"] == [0.08, 1.0]
+    assert cfg["training"]["scheduler"] == "cosine_annealing_each_stage"

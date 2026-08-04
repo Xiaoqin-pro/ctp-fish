@@ -71,9 +71,17 @@ def eval_transform(size: int):
     ])
 
 
-def train_transform(size: int):
+def pretrain_transform(size: int):
     return transforms.Compose([
-        transforms.RandomResizedCrop(size), transforms.RandomHorizontalFlip(),
+        transforms.RandomResizedCrop(size, scale=(0.2, 1.0)), transforms.RandomHorizontalFlip(),
+        transforms.ColorJitter(.1, .1, .1, .05), transforms.ToTensor(),
+        transforms.Normalize([.485, .456, .406], [.229, .224, .225]),
+    ])
+
+
+def classifier_transform(size: int):
+    return transforms.Compose([
+        transforms.RandomResizedCrop(size, scale=(0.08, 1.0)), transforms.RandomHorizontalFlip(),
         transforms.ColorJitter(.1, .1, .1, .05), transforms.ToTensor(),
         transforms.Normalize([.485, .456, .406], [.229, .224, .225]),
     ])
@@ -97,7 +105,7 @@ def validate(model, loader, device, amp: bool):
 
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--config", default="configs/cxt_fish_clib_style_outer_v1.yaml")
+    parser.add_argument("--config", default="configs/cxt_fish_clib_style_outer_v1_1.yaml")
     parser.add_argument("--fold", choices=["1", "2", "3"], required=True)
     parser.add_argument("--seed", type=int, required=True)
     parser.add_argument("--output-root")
@@ -136,12 +144,14 @@ def main() -> None:
             raise ValueError(f"Frozen asset hash mismatch for {relative}: {actual} != {expected}")
 
     image_size = int(cfg["image_size"])
-    train_set = CLIBStyleDataset(train_records, train_transform(image_size), float(cfg["views"]["ratio"]), class_ids)
+    train_set = CLIBStyleDataset(train_records, pretrain_transform(image_size), float(cfg["views"]["ratio"]), class_ids)
+    classifier_set = F4KDataset(train_records, classifier_transform(image_size), class_ids=class_ids)
     dev_set = F4KDataset(dev_records, eval_transform(image_size), class_ids=class_ids)
     sampler = Phase1ASampler(train_set.records, "s1_track_uniform", args.seed)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     common = {"num_workers": int(cfg["training"]["num_workers"]), "pin_memory": device.type == "cuda", "worker_init_fn": partial(worker_init, seed=args.seed)}
     train_loader = DataLoader(train_set, batch_size=int(cfg["training"]["batch_size"]), sampler=sampler, **common)
+    classifier_loader = DataLoader(classifier_set, batch_size=int(cfg["training"]["batch_size"]), sampler=sampler, **common)
     dev_loader = DataLoader(dev_set, batch_size=int(cfg["training"]["batch_size"]), shuffle=False, **common)
     model = ResNet18Contrastive(len(class_ids)).to(device)
     initialization_sha = state_dict_sha256(model.state_dict())
@@ -149,6 +159,7 @@ def main() -> None:
     amp = bool(cfg["training"]["amp"]) and device.type == "cuda"
     scaler = torch.amp.GradScaler(device.type, enabled=amp)
     pretrain_optimizer = AdamW(model.parameters(), lr=float(cfg["training"]["learning_rate"]), weight_decay=float(cfg["training"]["weight_decay"]))
+    pretrain_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(pretrain_optimizer, T_max=int(cfg["training"]["pretrain_epochs"]))
     output = ROOT / (args.output_root or cfg["output_root"]) / f"fold_{args.fold}" / f"seed{args.seed}"
     if output.exists() and any(output.iterdir()):
         raise FileExistsError(f"Refusing to overwrite {output}")
@@ -167,17 +178,20 @@ def main() -> None:
                 raise FloatingPointError("non-finite CLIB-style contrastive loss")
             scaler.scale(loss).backward(); scaler.step(pretrain_optimizer); scaler.update()
             loss_sum += float(loss.detach()); batches += 1
-        history.append({"stage": "pretrain", "epoch": epoch, "contrastive_loss": loss_sum / max(1, batches), "batches": batches})
+        pretrain_scheduler.step()
+        history.append({"stage": "pretrain", "epoch": epoch, "contrastive_loss": loss_sum / max(1, batches), "lr": pretrain_optimizer.param_groups[0]["lr"], "batches": batches})
+        atomic_save({"model": model.state_dict(), "optimizer": pretrain_optimizer.state_dict(), "scheduler": pretrain_scheduler.state_dict(), "scaler": scaler.state_dict(), "class_ids": class_ids, "fold": args.fold, "seed": args.seed, "epoch": epoch, "stage": "pretrain", "history": history, "config_sha256": sha256(cfg_path), "outer_train_sha256": sha256(train_path), "inner_dev_sha256": sha256(dev_path), "initialization_sha256": initialization_sha, "view_schema_sha256": view_schema_sha, "outer_test_accessed": False, "official_test_accessed": False}, output / "pretrain_last.pt")
         print(json.dumps(history[-1]), flush=True)
     for parameter in model.encoder.parameters():
         parameter.requires_grad_(False)
     model.encoder.eval()
     classifier_optimizer = AdamW(model.classifier.parameters(), lr=float(cfg["training"]["learning_rate"]), weight_decay=float(cfg["training"]["weight_decay"]))
+    classifier_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(classifier_optimizer, T_max=int(cfg["training"]["classifier_epochs"]))
     criterion = nn.CrossEntropyLoss(); best = -1.0; patience = 0
     for epoch in range(1, int(cfg["training"]["classifier_epochs"]) + 1):
         model.classifier.train(); sampler.set_epoch(epoch + int(cfg["training"]["pretrain_epochs"]))
         loss_sum = 0.0; batches = 0
-        for original, _, _, targets, _, _ in train_loader:
+        for original, targets, _, _ in classifier_loader:
             original, targets = original.to(device, non_blocking=True), targets.to(device, non_blocking=True)
             classifier_optimizer.zero_grad(set_to_none=True)
             with torch.no_grad():
@@ -187,9 +201,10 @@ def main() -> None:
                 raise FloatingPointError("non-finite CLIB-style classifier loss")
             loss.backward(); classifier_optimizer.step(); loss_sum += float(loss.detach()); batches += 1
         dev_loss, dev_accuracy = validate(model, dev_loader, device, amp)
-        row = {"stage": "classifier", "epoch": epoch, "train_ce": loss_sum / max(1, batches), "inner_dev_loss": dev_loss, "inner_dev_accuracy": dev_accuracy, "batches": batches}
+        classifier_scheduler.step()
+        row = {"stage": "classifier", "epoch": epoch, "train_ce": loss_sum / max(1, batches), "inner_dev_loss": dev_loss, "inner_dev_accuracy": dev_accuracy, "lr": classifier_optimizer.param_groups[0]["lr"], "batches": batches}
         history.append(row); print(json.dumps(row), flush=True)
-        state = {"model": model.state_dict(), "class_ids": class_ids, "fold": args.fold, "seed": args.seed, "epoch": epoch, "stage": "classifier", "history": history, "best_inner_dev_accuracy": best, "config_sha256": sha256(cfg_path), "outer_train_sha256": sha256(train_path), "inner_dev_sha256": sha256(dev_path), "initialization_sha256": initialization_sha, "view_schema_sha256": view_schema_sha, "outer_test_accessed": False, "official_test_accessed": False}
+        state = {"model": model.state_dict(), "optimizer": classifier_optimizer.state_dict(), "scheduler": classifier_scheduler.state_dict(), "scaler": scaler.state_dict(), "class_ids": class_ids, "fold": args.fold, "seed": args.seed, "epoch": epoch, "stage": "classifier", "history": history, "best_inner_dev_accuracy": best, "config_sha256": sha256(cfg_path), "outer_train_sha256": sha256(train_path), "inner_dev_sha256": sha256(dev_path), "initialization_sha256": initialization_sha, "view_schema_sha256": view_schema_sha, "outer_test_accessed": False, "official_test_accessed": False}
         if dev_accuracy > best:
             best, patience = dev_accuracy, 0; state["best_inner_dev_accuracy"] = best; atomic_save(state, output / "best.pt")
         else:
