@@ -59,3 +59,12 @@ def test_clib_style_v11_is_explicitly_adapted_and_uses_two_augmentations():
     assert cfg["pretrain_augmentation"]["crop_scale"] == [0.2, 1.0]
     assert cfg["classifier_augmentation"]["crop_scale"] == [0.08, 1.0]
     assert cfg["training"]["scheduler"] == "cosine_annealing_each_stage"
+
+
+def test_route_c_protocol_is_mask_guided_and_separate_from_clib_style():
+    cfg = yaml.safe_load((ROOT / "configs" / "cxt_fish_mask_contrastive_outer_v1.yaml").read_text(encoding="utf-8"))
+    assert cfg["protocol_version"] == "cxt_fish_mask_contrastive_outer_v1"
+    assert cfg["views"]["construction"] == "official_mask_guided"
+    assert cfg["views"]["mask_used_for_training_views"] is True
+    assert cfg["contrastive"]["hard_negative"] == "original_non_primary_same_sample"
+    assert cfg["seeds"] == [3407, 2026, 17]
