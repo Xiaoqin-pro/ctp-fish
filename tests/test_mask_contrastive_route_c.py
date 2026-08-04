@@ -3,12 +3,14 @@ import pandas as pd
 import pytest
 import torch
 import cv2
+import json
+import sys
 from PIL import Image
 
 from datasets.mask_contrastive_dataset import MaskContrastiveDataset, MaskContrastiveTransform
 from datasets.context_views import foreground_blur_view, non_primary_blur_view
 from losses.mask_subject_nonprimary import subject_nonprimary_infonce
-from scripts.evaluate_cxt_fish_mask_contrastive_outer import validate_state
+from scripts.evaluate_cxt_fish_mask_contrastive_outer import authorize_outer_test, validate_state
 
 
 def _records(tmp_path):
@@ -73,3 +75,34 @@ def test_route_c_evaluator_rejects_wrong_checkpoint_metadata(tmp_path):
     state = {"stage": "classifier", "fold": "1", "seed": 3407, "config_sha256": "bad", "outer_train_sha256": "bad", "inner_dev_sha256": "bad", "class_ids": ["1"], "outer_test_accessed": False, "official_test_accessed": False}
     with pytest.raises(ValueError, match="provenance mismatch"):
         validate_state(state, fold="1", seed=3407, cfg_path=cfg, train_path=train, dev_path=dev, class_ids=["1"])
+
+
+def _training_cells(tmp_path, complete=True):
+    cfg = tmp_path / "cfg.yaml"; cfg.write_text("output_root: outputs\n", encoding="utf-8")
+    output = tmp_path / "outputs"
+    for fold in ("1", "2", "3"):
+        for seed in (3407, 2026, 17):
+            cell = output / f"fold_{fold}" / f"seed{seed}"; cell.mkdir(parents=True)
+            if complete or not (fold == "3" and seed == 17):
+                for name in ("best.pt", "last.pt", "training_curve.csv"):
+                    (cell / name).write_text("placeholder", encoding="utf-8")
+                from scripts.evaluate_cxt_fish_mask_contrastive_outer import sha256
+                (cell / "run_metadata.json").write_text(json.dumps({
+                    "fold": fold, "seed": seed, "config_sha256": sha256(cfg),
+                    "outer_test_accessed": False, "official_test_accessed": False,
+                    "protocol_variant": "mask_guided_subject_nonprimary",
+                }), encoding="utf-8")
+    return cfg, {"output_root": "outputs"}
+
+
+def test_route_c_outer_test_requires_unlock_and_all_nine_cells(tmp_path):
+    cfg, config = _training_cells(tmp_path, complete=False)
+    with pytest.raises(PermissionError, match="--unlock-outer-test"):
+        authorize_outer_test(unlock_outer_test=False, cfg_path=cfg, cfg=config, root=tmp_path)
+    with pytest.raises(RuntimeError, match="missing"):
+        authorize_outer_test(unlock_outer_test=True, cfg_path=cfg, cfg=config, root=tmp_path)
+
+
+def test_route_c_outer_test_unlock_passes_only_after_all_cells(tmp_path):
+    cfg, config = _training_cells(tmp_path, complete=True)
+    authorize_outer_test(unlock_outer_test=True, cfg_path=cfg, cfg=config, root=tmp_path)

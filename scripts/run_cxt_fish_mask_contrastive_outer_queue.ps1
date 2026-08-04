@@ -13,7 +13,7 @@ foreach ($fold in @(1, 2, 3)) {
             $args = @('--config', 'configs/cxt_fish_mask_contrastive_outer_v1.yaml', '--fold', "$fold", '--seed', "$seed")
         } else {
             $script = Join-Path $root 'scripts\evaluate_cxt_fish_mask_contrastive_outer.py'
-            $args = @('--config', 'configs/cxt_fish_mask_contrastive_outer_v1.yaml', '--fold', "$fold", '--seed', "$seed", '--output-root', 'outputs/cxt_fish/mask_contrastive_outer_v1_evaluation')
+            $args = @('--config', 'configs/cxt_fish_mask_contrastive_outer_v1.yaml', '--fold', "$fold", '--seed', "$seed", '--output-root', 'outputs/cxt_fish/mask_contrastive_outer_v1_evaluation', '--unlock-outer-test')
         }
         $stamp = "fold_${fold}_seed${seed}"; $log = Join-Path $logDir "${Mode}_${stamp}.log"
         Write-Host "[$Mode] $stamp"; & $python $script @args 2>&1 | Tee-Object -FilePath $log

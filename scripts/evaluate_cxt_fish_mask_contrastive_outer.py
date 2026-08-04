@@ -1,4 +1,9 @@
-"""Evaluate one frozen route-C mask-guided outer-test cell."""
+"""Evaluate one frozen route-C mask-guided outer-test cell.
+
+Outer-test access is deliberately a two-key operation: all nine training
+cells must be complete and the caller must explicitly pass
+``--unlock-outer-test``.
+"""
 from __future__ import annotations
 
 import argparse
@@ -17,6 +22,46 @@ from scripts.evaluate_cxt_fish_outer import OuterContextDataset, metric_block, s
 
 
 ROOT = Path(__file__).resolve().parents[1]
+FOLDS = ("1", "2", "3")
+SEEDS = (3407, 2026, 17)
+REQUIRED_CELL_FILES = ("best.pt", "last.pt", "run_metadata.json", "training_curve.csv")
+PROTOCOL_VARIANT = "mask_guided_subject_nonprimary"
+
+
+def validate_all_training_cells(*, cfg_path: Path, cfg: dict, root: Path = ROOT) -> None:
+    """Validate all nine training cells without opening any outer-test file."""
+    config_hash = sha256(cfg_path)
+    for fold in FOLDS:
+        for seed in SEEDS:
+            cell = root / cfg["output_root"] / f"fold_{fold}" / f"seed{seed}"
+            missing = [name for name in REQUIRED_CELL_FILES if not (cell / name).is_file()]
+            if missing:
+                raise RuntimeError(f"outer evaluation locked: fold {fold} seed {seed} missing {missing}")
+            metadata = json.loads((cell / "run_metadata.json").read_text(encoding="utf-8"))
+            expected = {
+                "fold": fold,
+                "seed": seed,
+                "config_sha256": config_hash,
+                "outer_test_accessed": False,
+                "official_test_accessed": False,
+                "protocol_variant": PROTOCOL_VARIANT,
+            }
+            for key, value in expected.items():
+                actual = metadata.get(key)
+                if key == "fold":
+                    ok = str(actual) == value
+                elif key == "seed":
+                    ok = int(actual) == value
+                else:
+                    ok = actual == value
+                if not ok:
+                    raise ValueError(f"invalid training metadata at fold {fold} seed {seed}: {key}")
+
+
+def authorize_outer_test(*, unlock_outer_test: bool, cfg_path: Path, cfg: dict, root: Path = ROOT) -> None:
+    if not unlock_outer_test:
+        raise PermissionError("outer-test is locked; pass --unlock-outer-test after all 9 cells finish")
+    validate_all_training_cells(cfg_path=cfg_path, cfg=cfg, root=root)
 
 
 def validate_state(state: dict, *, fold: str, seed: int, cfg_path: Path, train_path: Path, dev_path: Path, class_ids: list[str]) -> None:
@@ -29,11 +74,14 @@ def validate_state(state: dict, *, fold: str, seed: int, cfg_path: Path, train_p
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(); parser.add_argument("--config", default="configs/cxt_fish_mask_contrastive_outer_v1.yaml"); parser.add_argument("--fold", choices=["1", "2", "3"], required=True); parser.add_argument("--seed", type=int, choices=[3407, 2026, 17], required=True); parser.add_argument("--output-root", default="outputs/cxt_fish/mask_contrastive_outer_v1_evaluation"); parser.add_argument("--dry-run", action="store_true"); args = parser.parse_args()
-    cfg_path = ROOT / args.config; cfg = yaml.safe_load(cfg_path.read_text(encoding="utf-8")); fold_root = ROOT / cfg["outer_manifest_root"] / f"fold_{args.fold}"; test_path, swap_path, train_path, dev_path = (fold_root / name for name in ("outer_test.csv", "outer_context_swap.csv", "outer_train.csv", "inner_dev.csv")); checkpoint = ROOT / cfg["output_root"] / f"fold_{args.fold}" / f"seed{args.seed}" / "best.pt"
+    parser = argparse.ArgumentParser(); parser.add_argument("--config", default="configs/cxt_fish_mask_contrastive_outer_v1.yaml"); parser.add_argument("--fold", choices=["1", "2", "3"], required=True); parser.add_argument("--seed", type=int, choices=[3407, 2026, 17], required=True); parser.add_argument("--output-root", default="outputs/cxt_fish/mask_contrastive_outer_v1_evaluation"); parser.add_argument("--dry-run", action="store_true"); parser.add_argument("--unlock-outer-test", action="store_true"); args = parser.parse_args()
+    cfg_path = ROOT / args.config; cfg = yaml.safe_load(cfg_path.read_text(encoding="utf-8")); checkpoint = ROOT / cfg["output_root"] / f"fold_{args.fold}" / f"seed{args.seed}" / "best.pt"
+    if args.dry_run:
+        print(json.dumps({"status": "dry_run", "fold": args.fold, "seed": args.seed, "outer_test_read": False, "checkpoint": str(checkpoint), "official_test_accessed": False}, indent=2)); return
+    authorize_outer_test(unlock_outer_test=args.unlock_outer_test, cfg_path=cfg_path, cfg=cfg)
+    fold_root = ROOT / cfg["outer_manifest_root"] / f"fold_{args.fold}"; test_path, swap_path, train_path, dev_path = (fold_root / name for name in ("outer_test.csv", "outer_context_swap.csv", "outer_train.csv", "inner_dev.csv"))
     if not all(path.is_file() for path in (test_path, swap_path, train_path, dev_path)): raise FileNotFoundError("frozen fold manifest is incomplete")
     records, manifest = pd.read_csv(test_path), pd.read_csv(swap_path)
-    if args.dry_run: print(json.dumps({"status": "dry_run", "fold": args.fold, "seed": args.seed, "outer_test_rows": len(records), "checkpoint": str(checkpoint), "official_test_accessed": False}, indent=2)); return
     if not checkpoint.is_file(): raise FileNotFoundError(checkpoint)
     frozen = json.loads((ROOT / cfg["class_ids_path"]).read_text(encoding="utf-8")); class_ids = [str(value) for value in frozen["class_ids"]]; state = torch.load(checkpoint, map_location="cpu", weights_only=False); validate_state(state, fold=args.fold, seed=args.seed, cfg_path=cfg_path, train_path=train_path, dev_path=dev_path, class_ids=class_ids)
     model = ResNet18Contrastive(len(class_ids)); model.load_state_dict(state["model"], strict=True); device = torch.device("cuda" if torch.cuda.is_available() else "cpu"); model.to(device).eval()
