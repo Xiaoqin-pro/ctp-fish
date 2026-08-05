@@ -11,6 +11,15 @@ foreach ($fold in @(1, 2, 3)) {
         if ($Mode -eq 'train') {
             $script = Join-Path $root 'scripts\train_cxt_fish_mask_contrastive_outer.py'
             $args = @('--config', 'configs/cxt_fish_mask_contrastive_outer_v1.yaml', '--fold', "$fold", '--seed', "$seed")
+            $cell = Join-Path $root "outputs\cxt_fish\mask_contrastive_outer_v1\fold_${fold}\seed${seed}"
+            if ((Test-Path (Join-Path $cell 'run_metadata.json')) -and (Test-Path (Join-Path $cell 'best.pt')) -and (Test-Path (Join-Path $cell 'last.pt'))) {
+                Write-Host "[train] fold_${fold}_seed${seed} already complete; skipping"
+                continue
+            }
+            $resume = $null
+            if (Test-Path (Join-Path $cell 'last.pt')) { $resume = Join-Path $cell 'last.pt' }
+            elseif (Test-Path (Join-Path $cell 'pretrain_last.pt')) { $resume = Join-Path $cell 'pretrain_last.pt' }
+            if ($resume) { $args += @('--resume', $resume); Write-Host "[train] resuming $resume" }
         } else {
             $script = Join-Path $root 'scripts\evaluate_cxt_fish_mask_contrastive_outer.py'
             $args = @('--config', 'configs/cxt_fish_mask_contrastive_outer_v1.yaml', '--fold', "$fold", '--seed', "$seed", '--output-root', 'outputs/cxt_fish/mask_contrastive_outer_v1_evaluation', '--unlock-outer-test')
