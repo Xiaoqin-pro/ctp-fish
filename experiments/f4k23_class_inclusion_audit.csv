@@ -1,0 +1,24 @@
+species_id,species_name,num_images,num_groups,included,inclusion_threshold,exclusion_reason
+01,Dascyllus reticulatus,12112,4240,True,15,
+02,Plectroglyphidodon dickii,2683,1225,True,15,
+03,Chromis chrysura,3593,1175,True,15,
+04,Amphiprion clarkii,4049,1021,True,15,
+05,Chaetodon lunulatus,2534,536,True,15,
+06,Chaetodon trifascialis,190,79,True,15,
+07,Myripristis kuntee,450,71,True,15,
+08,Acanthurus nigrofuscus,218,71,True,15,
+09,Hemigymnus fasciatus,241,58,True,15,
+10,Neoniphon sammara,299,53,True,15,
+11,Abudefduf vaigiensis,98,42,True,15,
+12,Canthigaster valentini,147,28,True,15,
+13,Pomacentrus moluccensis,181,27,True,15,
+14,Zebrasoma scopas,90,23,True,15,
+15,Hemigymnus melapterus,42,16,True,15,
+16,Lutjanus fulvus,206,15,True,15,
+17,Scolopsis bilineata,49,8,False,15,fewer_than_15_recorded_groups
+18,Scaridae,56,5,False,15,fewer_than_15_recorded_groups
+19,Pempheris vanicolensis,29,6,False,15,fewer_than_15_recorded_groups
+20,Zanclus cornutus,21,6,False,15,fewer_than_15_recorded_groups
+21,Neoglyphidodon nigroris,16,8,False,15,fewer_than_15_recorded_groups
+22,Balistapus undulatus,41,6,False,15,fewer_than_15_recorded_groups
+23,Siganus fuscescens,25,6,False,15,fewer_than_15_recorded_groups
