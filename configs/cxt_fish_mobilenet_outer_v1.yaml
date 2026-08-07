@@ -1,0 +1,39 @@
+# Frozen lightweight-backbone transfer check; no parameter search is allowed.
+protocol_version: cxt_fish_mobilenet_outer_v1
+parent_protocol: cxt_fish_outer_validation_v1
+protocol_variant: mobilenet_v3_large_f0_f1_transfer
+class_ids_path: splits/f4k16t_class_ids.json
+outer_manifest_output_root: outputs/cxt_fish/final_outer_manifests
+backbone: mobilenet_v3_large
+initialization: ImageNet1K_V2
+image_size: 224
+epochs: 40
+early_stopping_patience: 7
+optimizer: AdamW
+learning_rate: 0.0003
+weight_decay: 0.0001
+amp: true
+foreground_blur_kernel: 21
+foreground_blur_sigma: 5.0
+mask_feather_radius: 3
+methods:
+  - id: MV0
+    description: track-uniform sampling plus original-RGB CE
+    foreground_ce_weight: 0.0
+  - id: MV1
+    description: track-uniform sampling plus foreground-sufficiency CE
+    foreground_ce_weight: 1.0
+seeds: [3407]
+outer_folds: [1, 2, 3]
+metrics:
+  primary: [macro_f1, tail_f1, track_balanced_accuracy]
+  secondary: [balanced_accuracy, foreground_macro_f1, same_class_swap_macro_f1, cross_class_swap_macro_f1, dar, dar_flip, prediction_agreement]
+access_policy:
+  outer_test_may_be_read_after_all_six_training_cells_and_explicit_unlock: true
+  official_test_accessed: false
+  inner_dev_only_for_checkpoint_selection: true
+prohibitions:
+  - no_new_methods
+  - no_hyperparameter_search
+  - no_seed_selection
+  - no_checkpoint_selection_using_outer_test

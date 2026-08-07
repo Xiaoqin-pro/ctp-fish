@@ -15,6 +15,7 @@ from torchvision import transforms
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from datasets.f4k_dataset import F4KDataset
+from datasets.mask_variants import MASK_VARIANTS
 from metrics.classification import classification_metrics
 from metrics.track_metrics import cluster_bootstrap_mean, track_balanced_accuracy
 from models.resnet_classifier import build_resnet18
@@ -22,11 +23,17 @@ from tools.io_utils import atomic_csv_dump, atomic_json_dump
 
 
 def main() -> None:
-    parser=argparse.ArgumentParser(); parser.add_argument("--config",required=True); parser.add_argument("--checkpoint",required=True); parser.add_argument("--split",choices=["image","track"],required=True); parser.add_argument("--partition",choices=["val","test"],default="test"); parser.add_argument("--mask-variant",choices=["original","foreground_only","background_only"],default="original"); parser.add_argument("--evaluation-name"); parser.add_argument("--dry-run",action="store_true"); parser.add_argument("--overwrite",action="store_true"); args=parser.parse_args()
+    parser=argparse.ArgumentParser(); parser.add_argument("--config",required=True); parser.add_argument("--checkpoint",required=True); parser.add_argument("--split",choices=["image","track"],required=True); parser.add_argument("--partition",choices=["val","test"],default="test"); parser.add_argument("--mask-variant",choices=MASK_VARIANTS,default="original"); parser.add_argument("--shuffle-index"); parser.add_argument("--evaluation-name"); parser.add_argument("--dry-run",action="store_true"); parser.add_argument("--overwrite",action="store_true"); args=parser.parse_args()
     cfg=yaml.safe_load(Path(args.config).read_text())
     if args.dry_run: print({"checkpoint":args.checkpoint,"split":args.split,"partition":args.partition,"mask_variant":args.mask_variant,"outer_folds_locked":True}); return
     state=torch.load(args.checkpoint,map_location="cpu",weights_only=False); metadata=pd.read_csv(cfg["metadata_path"]); manifest=pd.read_csv(cfg[f"{args.split}_split_path"])
-    records=metadata.merge(manifest[["image_path","split"]],on="image_path",validate="one_to_one"); records=records[records.split==args.partition].reset_index(drop=True); class_ids=state["class_ids"]
+    records=metadata.merge(manifest[["image_path","split"]],on="image_path",validate="one_to_one")
+    if args.mask_variant == "shuffled_mask_background":
+        if not args.shuffle_index: raise ValueError("shuffled-mask view requires --shuffle-index.")
+        index=pd.read_csv(args.shuffle_index); required={"recipient_image_path","donor_mask_path","split"}
+        if not required.issubset(index.columns): raise ValueError("Shuffle index schema mismatch.")
+        records=records.merge(index[list(required)], left_on=["image_path","split"], right_on=["recipient_image_path","split"], validate="one_to_one").drop(columns="recipient_image_path")
+    records=records[records.split==args.partition].reset_index(drop=True); class_ids=state["class_ids"]
     transform=transforms.Compose([transforms.Resize(256),transforms.CenterCrop(int(cfg["image_size"])),transforms.ToTensor(),transforms.Normalize([.485,.456,.406],[.229,.224,.225])]); dataset=F4KDataset(records,transform,mask_variant=args.mask_variant,class_ids=class_ids)
     device=torch.device("cuda" if torch.cuda.is_available() else "cpu"); loader=DataLoader(dataset,batch_size=int(cfg["batch_size"]),shuffle=False,num_workers=2,pin_memory=device.type=="cuda")
     model=build_resnet18(len(class_ids)); model.load_state_dict(state["model"]); model.to(device).eval(); target=[]; prediction=[]; paths=[]; groups=[]

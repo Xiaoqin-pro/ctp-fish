@@ -1,0 +1,22 @@
+# CIR-Fish zero-training gate.  This file deliberately permits validation only.
+metadata_path: outputs/gate0/audit/f4k_metadata.csv
+track_split_path: splits/f4k16t_track_level_dev.csv
+swap_manifest_path: splits/f4k16t_phase1c_context_swap_val.csv
+checkpoint_path: outputs/cxt_fish/phase1c_pilot/F1_seed3407/best.pt
+image_size: 224
+batch_size: 64
+num_workers: 2
+mask_feather_radius: 3
+bootstrap_replicates: 1000
+bootstrap_seed: 3407
+gate_seed: 3407
+gate_version: cxt_fish_phase1f_cir_gate_v1
+locked_partition: val
+prohibited_partitions: [train, test, outer_folds]
+thresholds:
+  residual_donor_auroc: 0.60
+  cir_darflip_auroc: 0.60
+  residual_real_shuffle_ci_lower: 0.0
+  cir_real_shuffle_ci_lower: 0.0
+  min_positive_classes_fraction: 0.5
+  min_valid_pair_fraction: 0.95

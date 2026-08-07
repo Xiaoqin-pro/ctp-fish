@@ -4,6 +4,7 @@ data/*
 outputs/
 checkpoints/
 runs/
+logs/
 wandb/
 *.pt
 *.pth

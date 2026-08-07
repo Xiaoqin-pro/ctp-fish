@@ -23,6 +23,7 @@ class F4KDataset(Dataset):
         image = Image.open(Path(row.image_path)).convert("RGB")
         if self.mask_variant != "original":
             if not isinstance(row.get("mask_path"), str): raise ValueError("Mask view requested without a matched official mask.")
-            image = apply_mask_variant(image, Image.open(Path(row.mask_path)), self.mask_variant)
+            donor_mask = Image.open(Path(row.donor_mask_path)) if self.mask_variant == "shuffled_mask_background" and isinstance(row.get("donor_mask_path"), str) else None
+            image = apply_mask_variant(image, Image.open(Path(row.mask_path)), self.mask_variant, donor_mask=donor_mask)
         if self.transform: image = self.transform(image)
         return image, self.class_to_index[str(row.species_id)], str(row.image_path), str(row.group_id)

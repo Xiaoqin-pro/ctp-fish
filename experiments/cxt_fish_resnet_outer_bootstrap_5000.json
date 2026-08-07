@@ -1,0 +1,22 @@
+{
+  "comparison": "F1 - F0",
+  "official_test_accessed": false,
+  "bootstrap_scope": "primary endpoint only",
+  "views": {
+    "cross_swap": {
+      "estimand": "equal_weight_cell_mean",
+      "point_estimate": 0.07235949446649606,
+      "aggregation_order": "macro-F1 per fold-seed cell, paired difference, then equal-weight mean across cells",
+      "bootstrap_mean": 0.07173129310898137,
+      "ci95": [
+        0.06128029034802605,
+        0.0820284995962402
+      ],
+      "bootstrap_replicates": 5000,
+      "bootstrap_seed": 3410,
+      "stratification": "ground-truth species",
+      "cluster_unit": "group_id within fold and species; same sampled groups shared across paired methods and seeds",
+      "positive_fraction": 1.0
+    }
+  }
+}

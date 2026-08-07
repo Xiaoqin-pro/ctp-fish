@@ -1,0 +1,29 @@
+# Frozen CXT-Select evaluation. No training, calibration, internal test, or outer-fold access.
+metadata_path: outputs/gate0/audit/f4k_metadata.csv
+track_split_path: splits/f4k16t_track_level_dev.csv
+swap_manifest_path: splits/f4k16t_phase1c_context_swap_val.csv
+swap_manifest_seed: 3407
+swap_schema_version: cxt_fish_phase1c_swap_v1
+image_size: 224
+batch_size: 64
+foreground_blur_kernel: 21
+foreground_blur_sigma: 5.0
+mask_feather_radius: 3
+bootstrap_replicates: 2000
+bootstrap_seed: 3407
+coverage_levels: [1.0, 0.95, 0.90, 0.80]
+review_fraction: 0.10
+seeds: [3407, 2026, 17]
+checkpoint_pairs:
+  "3407":
+    f1: outputs/cxt_fish/phase1c_pilot/F1_seed3407/best.pt
+    f3: outputs/cxt_fish/phase1c_pilot/F3_seed3407/best.pt
+  "2026":
+    f1: outputs/cxt_fish/phase1c_replication/F1_seed2026/best.pt
+    f3: outputs/cxt_fish/phase1c_replication/F3_seed2026/best.pt
+  "17":
+    f1: outputs/cxt_fish/phase1c_replication/F1_seed17/best.pt
+    f3: outputs/cxt_fish/phase1c_replication/F3_seed17/best.pt
+locked_partitions:
+  evaluation: current_val_exploratory_only
+  prohibited: [internal_test, outer_folds, official_test]
