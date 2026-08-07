@@ -1,0 +1,17 @@
+image_size: 224
+learning_rate: 0.0003
+weight_decay: 0.0001
+epochs: 40
+early_stopping_patience: 7
+amp: true
+control_type: post_hoc_two_rgb_supervision_matched
+parent_commit: 0332cd9bf580cde12e5f82587dd7cae9dcba3b6b
+class_vocab: splits/f4k16t_class_ids.json
+outer_manifest_output_root: outputs/cxt_fish/final_outer_manifests
+output_root: outputs/cxt_fish/rgb2_control_outer
+recipient_batch_size: 64
+model_batch_after_concat: 128
+foreground_used: false
+mask_used: false
+outer_test_accessed: false
+official_test_accessed: false
