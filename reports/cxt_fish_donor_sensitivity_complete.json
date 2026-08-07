@@ -1,0 +1,649 @@
+{
+  "status": "complete",
+  "cells": 90,
+  "donor_seeds": [
+    4101,
+    4102,
+    4103,
+    4104,
+    4105
+  ],
+  "primary_manifest_sha256": {
+    "1": "98e12cb69d4b36cc2c1f673f7704f326e1c8cbda07282fade11672157df76941",
+    "2": "c8ae9421596cc202b60d040860dc42a4595338ef370ce56063313a9aedc934be",
+    "3": "de042addd93048988461bb9777ba6597532f7306bd087cf96ab8599e5df74738"
+  },
+  "official_test_accessed": false,
+  "records": [
+    {
+      "donor_seed": 4101,
+      "fold": 1,
+      "method": "F0",
+      "model_seed": 3407,
+      "metrics": "D:\\111\\Desktop\\ctp-fish\\outputs\\cxt_fish\\donor_sensitivity\\evaluation\\seed_4101\\fold_1\\F0_seed3407\\metrics.json"
+    },
+    {
+      "donor_seed": 4101,
+      "fold": 1,
+      "method": "F0",
+      "model_seed": 2026,
+      "metrics": "D:\\111\\Desktop\\ctp-fish\\outputs\\cxt_fish\\donor_sensitivity\\evaluation\\seed_4101\\fold_1\\F0_seed2026\\metrics.json"
+    },
+    {
+      "donor_seed": 4101,
+      "fold": 1,
+      "method": "F0",
+      "model_seed": 17,
+      "metrics": "D:\\111\\Desktop\\ctp-fish\\outputs\\cxt_fish\\donor_sensitivity\\evaluation\\seed_4101\\fold_1\\F0_seed17\\metrics.json"
+    },
+    {
+      "donor_seed": 4101,
+      "fold": 1,
+      "method": "F1",
+      "model_seed": 3407,
+      "metrics": "D:\\111\\Desktop\\ctp-fish\\outputs\\cxt_fish\\donor_sensitivity\\evaluation\\seed_4101\\fold_1\\F1_seed3407\\metrics.json"
+    },
+    {
+      "donor_seed": 4101,
+      "fold": 1,
+      "method": "F1",
+      "model_seed": 2026,
+      "metrics": "D:\\111\\Desktop\\ctp-fish\\outputs\\cxt_fish\\donor_sensitivity\\evaluation\\seed_4101\\fold_1\\F1_seed2026\\metrics.json"
+    },
+    {
+      "donor_seed": 4101,
+      "fold": 1,
+      "method": "F1",
+      "model_seed": 17,
+      "metrics": "D:\\111\\Desktop\\ctp-fish\\outputs\\cxt_fish\\donor_sensitivity\\evaluation\\seed_4101\\fold_1\\F1_seed17\\metrics.json"
+    },
+    {
+      "donor_seed": 4101,
+      "fold": 2,
+      "method": "F0",
+      "model_seed": 3407,
+      "metrics": "D:\\111\\Desktop\\ctp-fish\\outputs\\cxt_fish\\donor_sensitivity\\evaluation\\seed_4101\\fold_2\\F0_seed3407\\metrics.json"
+    },
+    {
+      "donor_seed": 4101,
+      "fold": 2,
+      "method": "F0",
+      "model_seed": 2026,
+      "metrics": "D:\\111\\Desktop\\ctp-fish\\outputs\\cxt_fish\\donor_sensitivity\\evaluation\\seed_4101\\fold_2\\F0_seed2026\\metrics.json"
+    },
+    {
+      "donor_seed": 4101,
+      "fold": 2,
+      "method": "F0",
+      "model_seed": 17,
+      "metrics": "D:\\111\\Desktop\\ctp-fish\\outputs\\cxt_fish\\donor_sensitivity\\evaluation\\seed_4101\\fold_2\\F0_seed17\\metrics.json"
+    },
+    {
+      "donor_seed": 4101,
+      "fold": 2,
+      "method": "F1",
+      "model_seed": 3407,
+      "metrics": "D:\\111\\Desktop\\ctp-fish\\outputs\\cxt_fish\\donor_sensitivity\\evaluation\\seed_4101\\fold_2\\F1_seed3407\\metrics.json"
+    },
+    {
+      "donor_seed": 4101,
+      "fold": 2,
+      "method": "F1",
+      "model_seed": 2026,
+      "metrics": "D:\\111\\Desktop\\ctp-fish\\outputs\\cxt_fish\\donor_sensitivity\\evaluation\\seed_4101\\fold_2\\F1_seed2026\\metrics.json"
+    },
+    {
+      "donor_seed": 4101,
+      "fold": 2,
+      "method": "F1",
+      "model_seed": 17,
+      "metrics": "D:\\111\\Desktop\\ctp-fish\\outputs\\cxt_fish\\donor_sensitivity\\evaluation\\seed_4101\\fold_2\\F1_seed17\\metrics.json"
+    },
+    {
+      "donor_seed": 4101,
+      "fold": 3,
+      "method": "F0",
+      "model_seed": 3407,
+      "metrics": "D:\\111\\Desktop\\ctp-fish\\outputs\\cxt_fish\\donor_sensitivity\\evaluation\\seed_4101\\fold_3\\F0_seed3407\\metrics.json"
+    },
+    {
+      "donor_seed": 4101,
+      "fold": 3,
+      "method": "F0",
+      "model_seed": 2026,
+      "metrics": "D:\\111\\Desktop\\ctp-fish\\outputs\\cxt_fish\\donor_sensitivity\\evaluation\\seed_4101\\fold_3\\F0_seed2026\\metrics.json"
+    },
+    {
+      "donor_seed": 4101,
+      "fold": 3,
+      "method": "F0",
+      "model_seed": 17,
+      "metrics": "D:\\111\\Desktop\\ctp-fish\\outputs\\cxt_fish\\donor_sensitivity\\evaluation\\seed_4101\\fold_3\\F0_seed17\\metrics.json"
+    },
+    {
+      "donor_seed": 4101,
+      "fold": 3,
+      "method": "F1",
+      "model_seed": 3407,
+      "metrics": "D:\\111\\Desktop\\ctp-fish\\outputs\\cxt_fish\\donor_sensitivity\\evaluation\\seed_4101\\fold_3\\F1_seed3407\\metrics.json"
+    },
+    {
+      "donor_seed": 4101,
+      "fold": 3,
+      "method": "F1",
+      "model_seed": 2026,
+      "metrics": "D:\\111\\Desktop\\ctp-fish\\outputs\\cxt_fish\\donor_sensitivity\\evaluation\\seed_4101\\fold_3\\F1_seed2026\\metrics.json"
+    },
+    {
+      "donor_seed": 4101,
+      "fold": 3,
+      "method": "F1",
+      "model_seed": 17,
+      "metrics": "D:\\111\\Desktop\\ctp-fish\\outputs\\cxt_fish\\donor_sensitivity\\evaluation\\seed_4101\\fold_3\\F1_seed17\\metrics.json"
+    },
+    {
+      "donor_seed": 4102,
+      "fold": 1,
+      "method": "F0",
+      "model_seed": 3407,
+      "metrics": "D:\\111\\Desktop\\ctp-fish\\outputs\\cxt_fish\\donor_sensitivity\\evaluation\\seed_4102\\fold_1\\F0_seed3407\\metrics.json"
+    },
+    {
+      "donor_seed": 4102,
+      "fold": 1,
+      "method": "F0",
+      "model_seed": 2026,
+      "metrics": "D:\\111\\Desktop\\ctp-fish\\outputs\\cxt_fish\\donor_sensitivity\\evaluation\\seed_4102\\fold_1\\F0_seed2026\\metrics.json"
+    },
+    {
+      "donor_seed": 4102,
+      "fold": 1,
+      "method": "F0",
+      "model_seed": 17,
+      "metrics": "D:\\111\\Desktop\\ctp-fish\\outputs\\cxt_fish\\donor_sensitivity\\evaluation\\seed_4102\\fold_1\\F0_seed17\\metrics.json"
+    },
+    {
+      "donor_seed": 4102,
+      "fold": 1,
+      "method": "F1",
+      "model_seed": 3407,
+      "metrics": "D:\\111\\Desktop\\ctp-fish\\outputs\\cxt_fish\\donor_sensitivity\\evaluation\\seed_4102\\fold_1\\F1_seed3407\\metrics.json"
+    },
+    {
+      "donor_seed": 4102,
+      "fold": 1,
+      "method": "F1",
+      "model_seed": 2026,
+      "metrics": "D:\\111\\Desktop\\ctp-fish\\outputs\\cxt_fish\\donor_sensitivity\\evaluation\\seed_4102\\fold_1\\F1_seed2026\\metrics.json"
+    },
+    {
+      "donor_seed": 4102,
+      "fold": 1,
+      "method": "F1",
+      "model_seed": 17,
+      "metrics": "D:\\111\\Desktop\\ctp-fish\\outputs\\cxt_fish\\donor_sensitivity\\evaluation\\seed_4102\\fold_1\\F1_seed17\\metrics.json"
+    },
+    {
+      "donor_seed": 4102,
+      "fold": 2,
+      "method": "F0",
+      "model_seed": 3407,
+      "metrics": "D:\\111\\Desktop\\ctp-fish\\outputs\\cxt_fish\\donor_sensitivity\\evaluation\\seed_4102\\fold_2\\F0_seed3407\\metrics.json"
+    },
+    {
+      "donor_seed": 4102,
+      "fold": 2,
+      "method": "F0",
+      "model_seed": 2026,
+      "metrics": "D:\\111\\Desktop\\ctp-fish\\outputs\\cxt_fish\\donor_sensitivity\\evaluation\\seed_4102\\fold_2\\F0_seed2026\\metrics.json"
+    },
+    {
+      "donor_seed": 4102,
+      "fold": 2,
+      "method": "F0",
+      "model_seed": 17,
+      "metrics": "D:\\111\\Desktop\\ctp-fish\\outputs\\cxt_fish\\donor_sensitivity\\evaluation\\seed_4102\\fold_2\\F0_seed17\\metrics.json"
+    },
+    {
+      "donor_seed": 4102,
+      "fold": 2,
+      "method": "F1",
+      "model_seed": 3407,
+      "metrics": "D:\\111\\Desktop\\ctp-fish\\outputs\\cxt_fish\\donor_sensitivity\\evaluation\\seed_4102\\fold_2\\F1_seed3407\\metrics.json"
+    },
+    {
+      "donor_seed": 4102,
+      "fold": 2,
+      "method": "F1",
+      "model_seed": 2026,
+      "metrics": "D:\\111\\Desktop\\ctp-fish\\outputs\\cxt_fish\\donor_sensitivity\\evaluation\\seed_4102\\fold_2\\F1_seed2026\\metrics.json"
+    },
+    {
+      "donor_seed": 4102,
+      "fold": 2,
+      "method": "F1",
+      "model_seed": 17,
+      "metrics": "D:\\111\\Desktop\\ctp-fish\\outputs\\cxt_fish\\donor_sensitivity\\evaluation\\seed_4102\\fold_2\\F1_seed17\\metrics.json"
+    },
+    {
+      "donor_seed": 4102,
+      "fold": 3,
+      "method": "F0",
+      "model_seed": 3407,
+      "metrics": "D:\\111\\Desktop\\ctp-fish\\outputs\\cxt_fish\\donor_sensitivity\\evaluation\\seed_4102\\fold_3\\F0_seed3407\\metrics.json"
+    },
+    {
+      "donor_seed": 4102,
+      "fold": 3,
+      "method": "F0",
+      "model_seed": 2026,
+      "metrics": "D:\\111\\Desktop\\ctp-fish\\outputs\\cxt_fish\\donor_sensitivity\\evaluation\\seed_4102\\fold_3\\F0_seed2026\\metrics.json"
+    },
+    {
+      "donor_seed": 4102,
+      "fold": 3,
+      "method": "F0",
+      "model_seed": 17,
+      "metrics": "D:\\111\\Desktop\\ctp-fish\\outputs\\cxt_fish\\donor_sensitivity\\evaluation\\seed_4102\\fold_3\\F0_seed17\\metrics.json"
+    },
+    {
+      "donor_seed": 4102,
+      "fold": 3,
+      "method": "F1",
+      "model_seed": 3407,
+      "metrics": "D:\\111\\Desktop\\ctp-fish\\outputs\\cxt_fish\\donor_sensitivity\\evaluation\\seed_4102\\fold_3\\F1_seed3407\\metrics.json"
+    },
+    {
+      "donor_seed": 4102,
+      "fold": 3,
+      "method": "F1",
+      "model_seed": 2026,
+      "metrics": "D:\\111\\Desktop\\ctp-fish\\outputs\\cxt_fish\\donor_sensitivity\\evaluation\\seed_4102\\fold_3\\F1_seed2026\\metrics.json"
+    },
+    {
+      "donor_seed": 4102,
+      "fold": 3,
+      "method": "F1",
+      "model_seed": 17,
+      "metrics": "D:\\111\\Desktop\\ctp-fish\\outputs\\cxt_fish\\donor_sensitivity\\evaluation\\seed_4102\\fold_3\\F1_seed17\\metrics.json"
+    },
+    {
+      "donor_seed": 4103,
+      "fold": 1,
+      "method": "F0",
+      "model_seed": 3407,
+      "metrics": "D:\\111\\Desktop\\ctp-fish\\outputs\\cxt_fish\\donor_sensitivity\\evaluation\\seed_4103\\fold_1\\F0_seed3407\\metrics.json"
+    },
+    {
+      "donor_seed": 4103,
+      "fold": 1,
+      "method": "F0",
+      "model_seed": 2026,
+      "metrics": "D:\\111\\Desktop\\ctp-fish\\outputs\\cxt_fish\\donor_sensitivity\\evaluation\\seed_4103\\fold_1\\F0_seed2026\\metrics.json"
+    },
+    {
+      "donor_seed": 4103,
+      "fold": 1,
+      "method": "F0",
+      "model_seed": 17,
+      "metrics": "D:\\111\\Desktop\\ctp-fish\\outputs\\cxt_fish\\donor_sensitivity\\evaluation\\seed_4103\\fold_1\\F0_seed17\\metrics.json"
+    },
+    {
+      "donor_seed": 4103,
+      "fold": 1,
+      "method": "F1",
+      "model_seed": 3407,
+      "metrics": "D:\\111\\Desktop\\ctp-fish\\outputs\\cxt_fish\\donor_sensitivity\\evaluation\\seed_4103\\fold_1\\F1_seed3407\\metrics.json"
+    },
+    {
+      "donor_seed": 4103,
+      "fold": 1,
+      "method": "F1",
+      "model_seed": 2026,
+      "metrics": "D:\\111\\Desktop\\ctp-fish\\outputs\\cxt_fish\\donor_sensitivity\\evaluation\\seed_4103\\fold_1\\F1_seed2026\\metrics.json"
+    },
+    {
+      "donor_seed": 4103,
+      "fold": 1,
+      "method": "F1",
+      "model_seed": 17,
+      "metrics": "D:\\111\\Desktop\\ctp-fish\\outputs\\cxt_fish\\donor_sensitivity\\evaluation\\seed_4103\\fold_1\\F1_seed17\\metrics.json"
+    },
+    {
+      "donor_seed": 4103,
+      "fold": 2,
+      "method": "F0",
+      "model_seed": 3407,
+      "metrics": "D:\\111\\Desktop\\ctp-fish\\outputs\\cxt_fish\\donor_sensitivity\\evaluation\\seed_4103\\fold_2\\F0_seed3407\\metrics.json"
+    },
+    {
+      "donor_seed": 4103,
+      "fold": 2,
+      "method": "F0",
+      "model_seed": 2026,
+      "metrics": "D:\\111\\Desktop\\ctp-fish\\outputs\\cxt_fish\\donor_sensitivity\\evaluation\\seed_4103\\fold_2\\F0_seed2026\\metrics.json"
+    },
+    {
+      "donor_seed": 4103,
+      "fold": 2,
+      "method": "F0",
+      "model_seed": 17,
+      "metrics": "D:\\111\\Desktop\\ctp-fish\\outputs\\cxt_fish\\donor_sensitivity\\evaluation\\seed_4103\\fold_2\\F0_seed17\\metrics.json"
+    },
+    {
+      "donor_seed": 4103,
+      "fold": 2,
+      "method": "F1",
+      "model_seed": 3407,
+      "metrics": "D:\\111\\Desktop\\ctp-fish\\outputs\\cxt_fish\\donor_sensitivity\\evaluation\\seed_4103\\fold_2\\F1_seed3407\\metrics.json"
+    },
+    {
+      "donor_seed": 4103,
+      "fold": 2,
+      "method": "F1",
+      "model_seed": 2026,
+      "metrics": "D:\\111\\Desktop\\ctp-fish\\outputs\\cxt_fish\\donor_sensitivity\\evaluation\\seed_4103\\fold_2\\F1_seed2026\\metrics.json"
+    },
+    {
+      "donor_seed": 4103,
+      "fold": 2,
+      "method": "F1",
+      "model_seed": 17,
+      "metrics": "D:\\111\\Desktop\\ctp-fish\\outputs\\cxt_fish\\donor_sensitivity\\evaluation\\seed_4103\\fold_2\\F1_seed17\\metrics.json"
+    },
+    {
+      "donor_seed": 4103,
+      "fold": 3,
+      "method": "F0",
+      "model_seed": 3407,
+      "metrics": "D:\\111\\Desktop\\ctp-fish\\outputs\\cxt_fish\\donor_sensitivity\\evaluation\\seed_4103\\fold_3\\F0_seed3407\\metrics.json"
+    },
+    {
+      "donor_seed": 4103,
+      "fold": 3,
+      "method": "F0",
+      "model_seed": 2026,
+      "metrics": "D:\\111\\Desktop\\ctp-fish\\outputs\\cxt_fish\\donor_sensitivity\\evaluation\\seed_4103\\fold_3\\F0_seed2026\\metrics.json"
+    },
+    {
+      "donor_seed": 4103,
+      "fold": 3,
+      "method": "F0",
+      "model_seed": 17,
+      "metrics": "D:\\111\\Desktop\\ctp-fish\\outputs\\cxt_fish\\donor_sensitivity\\evaluation\\seed_4103\\fold_3\\F0_seed17\\metrics.json"
+    },
+    {
+      "donor_seed": 4103,
+      "fold": 3,
+      "method": "F1",
+      "model_seed": 3407,
+      "metrics": "D:\\111\\Desktop\\ctp-fish\\outputs\\cxt_fish\\donor_sensitivity\\evaluation\\seed_4103\\fold_3\\F1_seed3407\\metrics.json"
+    },
+    {
+      "donor_seed": 4103,
+      "fold": 3,
+      "method": "F1",
+      "model_seed": 2026,
+      "metrics": "D:\\111\\Desktop\\ctp-fish\\outputs\\cxt_fish\\donor_sensitivity\\evaluation\\seed_4103\\fold_3\\F1_seed2026\\metrics.json"
+    },
+    {
+      "donor_seed": 4103,
+      "fold": 3,
+      "method": "F1",
+      "model_seed": 17,
+      "metrics": "D:\\111\\Desktop\\ctp-fish\\outputs\\cxt_fish\\donor_sensitivity\\evaluation\\seed_4103\\fold_3\\F1_seed17\\metrics.json"
+    },
+    {
+      "donor_seed": 4104,
+      "fold": 1,
+      "method": "F0",
+      "model_seed": 3407,
+      "metrics": "D:\\111\\Desktop\\ctp-fish\\outputs\\cxt_fish\\donor_sensitivity\\evaluation\\seed_4104\\fold_1\\F0_seed3407\\metrics.json"
+    },
+    {
+      "donor_seed": 4104,
+      "fold": 1,
+      "method": "F0",
+      "model_seed": 2026,
+      "metrics": "D:\\111\\Desktop\\ctp-fish\\outputs\\cxt_fish\\donor_sensitivity\\evaluation\\seed_4104\\fold_1\\F0_seed2026\\metrics.json"
+    },
+    {
+      "donor_seed": 4104,
+      "fold": 1,
+      "method": "F0",
+      "model_seed": 17,
+      "metrics": "D:\\111\\Desktop\\ctp-fish\\outputs\\cxt_fish\\donor_sensitivity\\evaluation\\seed_4104\\fold_1\\F0_seed17\\metrics.json"
+    },
+    {
+      "donor_seed": 4104,
+      "fold": 1,
+      "method": "F1",
+      "model_seed": 3407,
+      "metrics": "D:\\111\\Desktop\\ctp-fish\\outputs\\cxt_fish\\donor_sensitivity\\evaluation\\seed_4104\\fold_1\\F1_seed3407\\metrics.json"
+    },
+    {
+      "donor_seed": 4104,
+      "fold": 1,
+      "method": "F1",
+      "model_seed": 2026,
+      "metrics": "D:\\111\\Desktop\\ctp-fish\\outputs\\cxt_fish\\donor_sensitivity\\evaluation\\seed_4104\\fold_1\\F1_seed2026\\metrics.json"
+    },
+    {
+      "donor_seed": 4104,
+      "fold": 1,
+      "method": "F1",
+      "model_seed": 17,
+      "metrics": "D:\\111\\Desktop\\ctp-fish\\outputs\\cxt_fish\\donor_sensitivity\\evaluation\\seed_4104\\fold_1\\F1_seed17\\metrics.json"
+    },
+    {
+      "donor_seed": 4104,
+      "fold": 2,
+      "method": "F0",
+      "model_seed": 3407,
+      "metrics": "D:\\111\\Desktop\\ctp-fish\\outputs\\cxt_fish\\donor_sensitivity\\evaluation\\seed_4104\\fold_2\\F0_seed3407\\metrics.json"
+    },
+    {
+      "donor_seed": 4104,
+      "fold": 2,
+      "method": "F0",
+      "model_seed": 2026,
+      "metrics": "D:\\111\\Desktop\\ctp-fish\\outputs\\cxt_fish\\donor_sensitivity\\evaluation\\seed_4104\\fold_2\\F0_seed2026\\metrics.json"
+    },
+    {
+      "donor_seed": 4104,
+      "fold": 2,
+      "method": "F0",
+      "model_seed": 17,
+      "metrics": "D:\\111\\Desktop\\ctp-fish\\outputs\\cxt_fish\\donor_sensitivity\\evaluation\\seed_4104\\fold_2\\F0_seed17\\metrics.json"
+    },
+    {
+      "donor_seed": 4104,
+      "fold": 2,
+      "method": "F1",
+      "model_seed": 3407,
+      "metrics": "D:\\111\\Desktop\\ctp-fish\\outputs\\cxt_fish\\donor_sensitivity\\evaluation\\seed_4104\\fold_2\\F1_seed3407\\metrics.json"
+    },
+    {
+      "donor_seed": 4104,
+      "fold": 2,
+      "method": "F1",
+      "model_seed": 2026,
+      "metrics": "D:\\111\\Desktop\\ctp-fish\\outputs\\cxt_fish\\donor_sensitivity\\evaluation\\seed_4104\\fold_2\\F1_seed2026\\metrics.json"
+    },
+    {
+      "donor_seed": 4104,
+      "fold": 2,
+      "method": "F1",
+      "model_seed": 17,
+      "metrics": "D:\\111\\Desktop\\ctp-fish\\outputs\\cxt_fish\\donor_sensitivity\\evaluation\\seed_4104\\fold_2\\F1_seed17\\metrics.json"
+    },
+    {
+      "donor_seed": 4104,
+      "fold": 3,
+      "method": "F0",
+      "model_seed": 3407,
+      "metrics": "D:\\111\\Desktop\\ctp-fish\\outputs\\cxt_fish\\donor_sensitivity\\evaluation\\seed_4104\\fold_3\\F0_seed3407\\metrics.json"
+    },
+    {
+      "donor_seed": 4104,
+      "fold": 3,
+      "method": "F0",
+      "model_seed": 2026,
+      "metrics": "D:\\111\\Desktop\\ctp-fish\\outputs\\cxt_fish\\donor_sensitivity\\evaluation\\seed_4104\\fold_3\\F0_seed2026\\metrics.json"
+    },
+    {
+      "donor_seed": 4104,
+      "fold": 3,
+      "method": "F0",
+      "model_seed": 17,
+      "metrics": "D:\\111\\Desktop\\ctp-fish\\outputs\\cxt_fish\\donor_sensitivity\\evaluation\\seed_4104\\fold_3\\F0_seed17\\metrics.json"
+    },
+    {
+      "donor_seed": 4104,
+      "fold": 3,
+      "method": "F1",
+      "model_seed": 3407,
+      "metrics": "D:\\111\\Desktop\\ctp-fish\\outputs\\cxt_fish\\donor_sensitivity\\evaluation\\seed_4104\\fold_3\\F1_seed3407\\metrics.json"
+    },
+    {
+      "donor_seed": 4104,
+      "fold": 3,
+      "method": "F1",
+      "model_seed": 2026,
+      "metrics": "D:\\111\\Desktop\\ctp-fish\\outputs\\cxt_fish\\donor_sensitivity\\evaluation\\seed_4104\\fold_3\\F1_seed2026\\metrics.json"
+    },
+    {
+      "donor_seed": 4104,
+      "fold": 3,
+      "method": "F1",
+      "model_seed": 17,
+      "metrics": "D:\\111\\Desktop\\ctp-fish\\outputs\\cxt_fish\\donor_sensitivity\\evaluation\\seed_4104\\fold_3\\F1_seed17\\metrics.json"
+    },
+    {
+      "donor_seed": 4105,
+      "fold": 1,
+      "method": "F0",
+      "model_seed": 3407,
+      "metrics": "D:\\111\\Desktop\\ctp-fish\\outputs\\cxt_fish\\donor_sensitivity\\evaluation\\seed_4105\\fold_1\\F0_seed3407\\metrics.json"
+    },
+    {
+      "donor_seed": 4105,
+      "fold": 1,
+      "method": "F0",
+      "model_seed": 2026,
+      "metrics": "D:\\111\\Desktop\\ctp-fish\\outputs\\cxt_fish\\donor_sensitivity\\evaluation\\seed_4105\\fold_1\\F0_seed2026\\metrics.json"
+    },
+    {
+      "donor_seed": 4105,
+      "fold": 1,
+      "method": "F0",
+      "model_seed": 17,
+      "metrics": "D:\\111\\Desktop\\ctp-fish\\outputs\\cxt_fish\\donor_sensitivity\\evaluation\\seed_4105\\fold_1\\F0_seed17\\metrics.json"
+    },
+    {
+      "donor_seed": 4105,
+      "fold": 1,
+      "method": "F1",
+      "model_seed": 3407,
+      "metrics": "D:\\111\\Desktop\\ctp-fish\\outputs\\cxt_fish\\donor_sensitivity\\evaluation\\seed_4105\\fold_1\\F1_seed3407\\metrics.json"
+    },
+    {
+      "donor_seed": 4105,
+      "fold": 1,
+      "method": "F1",
+      "model_seed": 2026,
+      "metrics": "D:\\111\\Desktop\\ctp-fish\\outputs\\cxt_fish\\donor_sensitivity\\evaluation\\seed_4105\\fold_1\\F1_seed2026\\metrics.json"
+    },
+    {
+      "donor_seed": 4105,
+      "fold": 1,
+      "method": "F1",
+      "model_seed": 17,
+      "metrics": "D:\\111\\Desktop\\ctp-fish\\outputs\\cxt_fish\\donor_sensitivity\\evaluation\\seed_4105\\fold_1\\F1_seed17\\metrics.json"
+    },
+    {
+      "donor_seed": 4105,
+      "fold": 2,
+      "method": "F0",
+      "model_seed": 3407,
+      "metrics": "D:\\111\\Desktop\\ctp-fish\\outputs\\cxt_fish\\donor_sensitivity\\evaluation\\seed_4105\\fold_2\\F0_seed3407\\metrics.json"
+    },
+    {
+      "donor_seed": 4105,
+      "fold": 2,
+      "method": "F0",
+      "model_seed": 2026,
+      "metrics": "D:\\111\\Desktop\\ctp-fish\\outputs\\cxt_fish\\donor_sensitivity\\evaluation\\seed_4105\\fold_2\\F0_seed2026\\metrics.json"
+    },
+    {
+      "donor_seed": 4105,
+      "fold": 2,
+      "method": "F0",
+      "model_seed": 17,
+      "metrics": "D:\\111\\Desktop\\ctp-fish\\outputs\\cxt_fish\\donor_sensitivity\\evaluation\\seed_4105\\fold_2\\F0_seed17\\metrics.json"
+    },
+    {
+      "donor_seed": 4105,
+      "fold": 2,
+      "method": "F1",
+      "model_seed": 3407,
+      "metrics": "D:\\111\\Desktop\\ctp-fish\\outputs\\cxt_fish\\donor_sensitivity\\evaluation\\seed_4105\\fold_2\\F1_seed3407\\metrics.json"
+    },
+    {
+      "donor_seed": 4105,
+      "fold": 2,
+      "method": "F1",
+      "model_seed": 2026,
+      "metrics": "D:\\111\\Desktop\\ctp-fish\\outputs\\cxt_fish\\donor_sensitivity\\evaluation\\seed_4105\\fold_2\\F1_seed2026\\metrics.json"
+    },
+    {
+      "donor_seed": 4105,
+      "fold": 2,
+      "method": "F1",
+      "model_seed": 17,
+      "metrics": "D:\\111\\Desktop\\ctp-fish\\outputs\\cxt_fish\\donor_sensitivity\\evaluation\\seed_4105\\fold_2\\F1_seed17\\metrics.json"
+    },
+    {
+      "donor_seed": 4105,
+      "fold": 3,
+      "method": "F0",
+      "model_seed": 3407,
+      "metrics": "D:\\111\\Desktop\\ctp-fish\\outputs\\cxt_fish\\donor_sensitivity\\evaluation\\seed_4105\\fold_3\\F0_seed3407\\metrics.json"
+    },
+    {
+      "donor_seed": 4105,
+      "fold": 3,
+      "method": "F0",
+      "model_seed": 2026,
+      "metrics": "D:\\111\\Desktop\\ctp-fish\\outputs\\cxt_fish\\donor_sensitivity\\evaluation\\seed_4105\\fold_3\\F0_seed2026\\metrics.json"
+    },
+    {
+      "donor_seed": 4105,
+      "fold": 3,
+      "method": "F0",
+      "model_seed": 17,
+      "metrics": "D:\\111\\Desktop\\ctp-fish\\outputs\\cxt_fish\\donor_sensitivity\\evaluation\\seed_4105\\fold_3\\F0_seed17\\metrics.json"
+    },
+    {
+      "donor_seed": 4105,
+      "fold": 3,
+      "method": "F1",
+      "model_seed": 3407,
+      "metrics": "D:\\111\\Desktop\\ctp-fish\\outputs\\cxt_fish\\donor_sensitivity\\evaluation\\seed_4105\\fold_3\\F1_seed3407\\metrics.json"
+    },
+    {
+      "donor_seed": 4105,
+      "fold": 3,
+      "method": "F1",
+      "model_seed": 2026,
+      "metrics": "D:\\111\\Desktop\\ctp-fish\\outputs\\cxt_fish\\donor_sensitivity\\evaluation\\seed_4105\\fold_3\\F1_seed2026\\metrics.json"
+    },
+    {
+      "donor_seed": 4105,
+      "fold": 3,
+      "method": "F1",
+      "model_seed": 17,
+      "metrics": "D:\\111\\Desktop\\ctp-fish\\outputs\\cxt_fish\\donor_sensitivity\\evaluation\\seed_4105\\fold_3\\F1_seed17\\metrics.json"
+    }
+  ]
+}
