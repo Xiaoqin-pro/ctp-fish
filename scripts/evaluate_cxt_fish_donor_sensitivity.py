@@ -104,10 +104,14 @@ def main() -> None:
     records = pd.read_csv(test_path)
     manifest = pd.read_csv(manifest_path)
     original = pd.read_csv(frozen_original)
-    key = ["image_path", "group_id", "target"]
-    joined = records.merge(original[key + ["original"]], on=key, how="inner", validate="one_to_one")
-    if len(joined) != len(records):
+    if set(records["image_path"].astype(str)) != set(original["image_path"].astype(str)):
         raise ValueError("Frozen original predictions do not pair one-to-one with outer-test.")
+    group_check = records[["image_path", "group_id"]].merge(
+        original[["image_path", "group_id"]], on="image_path", how="inner",
+        suffixes=("_outer", "_frozen"), validate="one_to_one"
+    )
+    if len(group_check) != len(records) or not group_check["group_id_outer"].astype(str).equals(group_check["group_id_frozen"].astype(str)):
+        raise ValueError("Frozen original group IDs do not match outer-test.")
     state = torch.load(checkpoint, map_location="cpu", weights_only=False)
     class_ids = [str(value) for value in state["class_ids"]]
     model = ResNet18Context(len(class_ids))
