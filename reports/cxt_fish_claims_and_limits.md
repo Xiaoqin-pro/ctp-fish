@@ -1,7 +1,7 @@
 # CXT-Fish claims and limits (frozen)
 
 This file freezes the claims permitted in the final manuscript and the claims
-that must not be made after the outer confirmation.
+that must not be made after the frozen post-development confirmation.
 
 ## Permitted claims
 
@@ -9,8 +9,9 @@ that must not be made after the outer confirmation.
   same group are shared across development and evaluation; group-disjoint
   evaluation is stricter.
 - F4K-16T models show measurable dependence on contextual information under
-  the fixed foreground and context-swap tests.
-- On the frozen ResNet18 outer confirmation, foreground-sufficiency training
+  the fixed foreground and donor-context composite intervention tests.
+- On the frozen ResNet18 post-development, group-disjoint confirmation
+  analysis, foreground-sufficiency training
   raises cross-class-swap macro-F1 by 7.24 percentage points in the
   pre-registered cell-mean summary.
 - ResNet18 clean macro-F1 changes by -0.21 percentage points on average; a
@@ -18,9 +19,10 @@ that must not be made after the outer confirmation.
 - DAR-flip is lower for CXT-Fish in all nine paired ResNet18 cells.
 - Masks are used during training-view construction only; inference uses an
   ordinary RGB image and one model forward.
-- MobileNetV3-Large shows the same foreground and cross-swap robustness
-  direction, but with a 2.94-point clean macro-F1 decrease; it is an
-  architecture-sensitivity supplement.
+- MobileNetV3-Large shows average foreground and donor-context composite
+  improvement, with heterogeneous cross-swap effects across folds and a
+  2.94-point clean
+  macro-F1 decrease; it is an architecture-sensitivity supplement.
 - The clean--robustness trade-off is architecture-sensitive.
 
 ## Prohibited claims
@@ -36,6 +38,11 @@ that must not be made after the outer confirmation.
 
 ## Evidence boundaries
 
+- The historical development split was drawn from the same corpus as the
+  outer folds; some historical development groups necessarily occur in the
+  later outer-test partitions. The outer result is therefore a frozen,
+  post-development group-disjoint confirmation analysis, not a fully blind
+  nested evaluation or method-selection-independent test.
 - Route C is a fixed two-stage mechanism control, not a faithful CLIB
   reproduction and not an exhaustive contrastive-learning comparison.
 - MobileNetV3 uses one registered seed and is not a second main confirmation.

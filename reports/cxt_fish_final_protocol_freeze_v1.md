@@ -26,6 +26,12 @@ outer manifest and are never used for checkpoint or configuration selection.
 They were not accessed before this freeze. The outer manifest must not be used
 to change the method, seed list, checkpoint rule or metrics.
 
+The historical development split and the outer folds were drawn from the same
+corpus. Consequently, some historical development groups necessarily occur
+in a later outer-test partition. The result is reported as a frozen,
+post-development, group-disjoint confirmation analysis, not as a fully blind
+nested evaluation or a method-selection-independent test.
+
 The CXT-Select negative evaluation was frozen at commit
 `d387b858983dccef57d8a3eea93f274b69c4e133`. No locked partition was accessed
 by that evaluation.
@@ -50,14 +56,15 @@ The complete configuration is in
 `configs/cxt_fish_outer_validation_v1.yaml`. The referenced split and manifest
 hashes are recorded there and must match before any outer inference.
 
-Context-swap evaluation uses a separate manifest for each outer-test fold.
+Donor-context composite evaluation uses a separate manifest for each
+outer-test fold.
 Recipients and donors come only from that fold's outer-test records; no
 outer-train or inner-dev record can enter a swap manifest. Unsupported donor
 cases are retained explicitly rather than filled from another partition.
 
 Primary metrics are macro-F1, tail-F1 and track-balanced accuracy. Secondary
 metrics are balanced accuracy, foreground macro-F1, same-class and cross-class
-context-swap macro-F1, DAR, DAR-flip and prediction agreement. All paired
+donor-context composite macro-F1, DAR, DAR-flip and prediction agreement. All paired
 intervals use group/trajectory bootstrap. Results must be reported per class,
 per trajectory and by head/mid/tail groups.
 

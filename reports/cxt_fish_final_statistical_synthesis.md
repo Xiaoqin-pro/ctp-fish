@@ -1,29 +1,18 @@
 # CXT-Fish final statistical synthesis
 
-This synthesis is generated only from frozen outer-evaluation JSON/CSV
-outputs. No model was trained or re-inferred during finalization.
+This synthesis is generated only from frozen outer-evaluation JSON/CSV outputs. No model was trained or re-inferred.
 
-## Main interpretation
+## Primary interpretation
 
-- ResNet18 foreground-sufficiency training is a context-robustness
-  intervention, not a clean-accuracy improvement method.
-- The frozen ResNet18 cell means are: F0 original macro-F1 0.957721, F1
-  0.955602 (−0.21 pp); F0 cross-swap macro-F1 0.518933, F1 0.591293
-  (+7.24 pp); F0 DAR-flip 0.214595, F1 0.179226 (−3.54 pp).
-- The pooled species-stratified group bootstrap gives a 95% interval of
-  [0.0624, 0.0859] for the ResNet18 cross-swap difference F1−F0.
-- MobileNetV3 is an architecture-sensitivity supplement: original macro-F1
-  changes from 0.958009 to 0.928605 (−2.94 pp), while cross-swap changes from
-  0.517315 to 0.565552 (+4.82 pp).
-- Route C is a fixed two-stage mechanism control, not an exhaustive or
-  faithful CLIB reproduction.
+- On the frozen ResNet18 post-development, group-disjoint confirmation analysis, foreground-sufficiency training is interpreted as a context-robustness intervention rather than a clean-accuracy improvement method.
+- MobileNetV3 shows average robustness improvement with heterogeneous cross-swap effects and a larger clean-accuracy cost; it is architecture-sensitivity evidence only.
+- Route C is retained as a fixed two-stage mechanism control and is not treated as an exhaustive contrastive-learning comparison.
 
 ## Bootstrap protocol
 
-All 5,000-replicate intervals use ground-truth species stratification and
-`(fold, group_id)` clustering. For ResNet18, all registered seeds belonging to
-the same sampled group are combined before resampling; seeds are not treated
-as independent clusters. Official TEST remains locked.
+The primary estimand is an equal-weight mean of paired cell differences. Each replicate resamples groups within fold-by-species strata, shares the same draws across paired methods and registered seeds, computes macro-F1 separately for every fold-seed cell, and averages the resulting cell differences. Official TEST remains locked.
+
+The earlier pooled-prediction aggregation is retained only as a supplementary sensitivity analysis and is not paired with the primary cell-mean estimate.
 
 ## Generated files
 
