@@ -18,8 +18,8 @@ from datasets.context_views import feathered_mask  # noqa: E402
 
 def describe(frame: pd.DataFrame, column: str) -> dict:
     values = frame[column].to_numpy(float)
-    q = np.quantile(values, [0.25, 0.5, 0.9, 0.95])
-    return {"mean": float(values.mean()), "median": float(q[1]), "iqr": [float(q[0]), float(q[1])], "q25": float(q[0]), "q90": float(q[2]), "q95": float(q[3]), "max": float(values.max()), "gt0": float(np.mean(values > 0)), "gt1pct": float(np.mean(values > .01)), "gt5pct": float(np.mean(values > .05)), "gt10pct": float(np.mean(values > .10)), "gt20pct": float(np.mean(values > .20))}
+    q = np.quantile(values, [0.25, 0.5, 0.75, 0.9, 0.95])
+    return {"mean": float(values.mean()), "median": float(q[1]), "iqr": [float(q[0]), float(q[2])], "q25": float(q[0]), "q90": float(q[3]), "q95": float(q[4]), "max": float(values.max()), "gt0": float(np.mean(values > 0)), "gt1pct": float(np.mean(values > .01)), "gt5pct": float(np.mean(values > .05)), "gt10pct": float(np.mean(values > .10)), "gt20pct": float(np.mean(values > .20))}
 
 
 def main() -> None:

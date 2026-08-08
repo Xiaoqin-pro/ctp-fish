@@ -1,0 +1,19 @@
+{
+  "schema_version": "cxt_fish_rgb2_bootstrap_v2",
+  "observed_point_estimate": 0.06829039643796267,
+  "bootstrap_mean": 0.06832533664491452,
+  "ci95": [
+    0.05710974015531095,
+    0.0787065804865791
+  ],
+  "bootstrap_replicates": 5000,
+  "bootstrap_seed": 3410,
+  "interval_method": "percentile",
+  "estimand": "equal_weight_cell_mean_CXT_minus_F0_2RGB_cross_class_donor_context_composite_macro_f1",
+  "cluster_unit": "group_id",
+  "stratification": "ground_truth_species_within_fold",
+  "shared_resampling_structure": "paired_methods_and_three_seeds_within_fold",
+  "analysis_role": "exploratory_post_hoc_mechanism_control",
+  "official_test_accessed": false,
+  "supersedes": "experiments/cxt_fish_rgb2_vs_f1_bootstrap_5000.json"
+}
