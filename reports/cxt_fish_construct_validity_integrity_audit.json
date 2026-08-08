@@ -2,7 +2,8 @@
   "status": "complete",
   "protocol_config_sha256": "587bc24fe2f088e899dfb0c3b82b7fbe1addcb0bb71c5a1346a86d78ec6706b1",
   "protocol_commit": "7471c0cb64305a811231755b033fd14a3199300f",
-  "final_package_head": "dae183ae43e412ef03a18ac2e083e17b17b670c5",
+  "audit_source_head": "893d4a76ce1714db1d240f3967ed5015e210bc98",
+  "final_package_head_recorded_by_git": true,
   "rgb2_observed_point_estimate": 0.06829039643796267,
   "rgb2_bootstrap_mean": 0.06832533664491452,
   "rgb2_ci95": [

@@ -5,7 +5,8 @@ This package is a closed, reviewer-motivated, inference-only and reanalysis-only
 ## 1. Protocol
 
 - Protocol commit: `7471c0cb64305a811231755b033fd14a3199300f`.
-- Final package head recorded by Git: `dae183ae43e412ef03a18ac2e083e17b17b670c5`.
+- Audit source head before this report commit: `893d4a76ce1714db1d240f3967ed5015e210bc98`.
+- The final package head is recorded by Git history rather than embedded recursively in this generated report.
 - Role: post-hoc construct-validity and statistics repair.
 
 ## 2. F0-2RGB statistical repair
