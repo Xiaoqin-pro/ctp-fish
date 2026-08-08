@@ -1,0 +1,22 @@
+{
+  "status": "complete",
+  "protocol_commit": "11ecb6436e78af9a22c5141760ff7dceefc60bab",
+  "final_commit": "61b36a4fd833792b177c84c54b4f0db5183b8cb5",
+  "donor_sensitivity_cells": 90,
+  "donor_sensitivity_seeds": [
+    4101,
+    4102,
+    4103,
+    4104,
+    4105
+  ],
+  "rgb2_training_cells": 9,
+  "rgb2_evaluation_cells": 9,
+  "primary_manifest_sha256": {
+    "1": "98e12cb69d4b36cc2c1f673f7704f326e1c8cbda07282fade11672157df76941",
+    "2": "c8ae9421596cc202b60d040860dc42a4595338ef370ce56063313a9aedc934be",
+    "3": "de042addd93048988461bb9777ba6597532f7306bd087cf96ab8599e5df74738"
+  },
+  "official_test_accessed": false,
+  "primary_artifacts_changed": false
+}
