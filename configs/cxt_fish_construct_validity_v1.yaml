@@ -1,0 +1,29 @@
+protocol_id: cxt_fish_construct_validity_v1
+status:
+  post_hoc_after_main_results: true
+  reviewer_motivated: true
+  inference_and_reanalysis_only: true
+  no_new_training: true
+  no_method_selection: true
+main_artifacts:
+  frozen_f0_f1_unchanged: true
+  frozen_primary_donor_manifest_unchanged: true
+  rgb2_training_unchanged: true
+  official_test_accessed: false
+allowed_work:
+  rgb2_statistical_repair: true
+  donor_species_audit: true
+  donor_foreground_residual_audit: true
+  fish_suppressed_donor_evaluation: true
+  gate0_split_comparability_audit: true
+fish_suppressed_donor:
+  role: post_hoc_construct_validity_sensitivity
+  primary_pairing_seed: 3407
+  frozen_models_only: true
+  no_parameter_search: true
+  all_results_reported: true
+  inpainting: telea_context_sanity_frozen
+  inpaint_radius: 3
+  mask_kernel: elliptical_3x3
+  mask_dilation_iterations: 1
+  pairing: frozen_primary_cross_class_donor_manifest
