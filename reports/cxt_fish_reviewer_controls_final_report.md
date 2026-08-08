@@ -33,6 +33,8 @@ generalization. They do not convert the post-hoc controls into confirmatory
 endpoints or alter the frozen primary result.
 
 Protocol commit: `11ecb6436e78af9a22c5141760ff7dceefc60bab`
-Final commit: `61b36a4fd833792b177c84c54b4f0db5183b8cb5`
+Audit source head before this generated report: `61b36a4fd833792b177c84c54b4f0db5183b8cb5`
+The final package PR head is recorded by Git history rather than embedded
+recursively in this generated artifact.
 
 Integrity audit: passed.

@@ -13,7 +13,19 @@ that must not be made after the frozen post-development confirmation.
 - On the frozen ResNet18 post-development, group-disjoint confirmation
   analysis, foreground-sufficiency training
   raises cross-class-swap macro-F1 by 7.24 percentage points in the
-  pre-registered cell-mean summary.
+  frozen equal-weight cell-mean summary. The frozen outer protocol treated
+  cross-class donor-context-composite macro-F1 as a secondary robustness
+  metric; formal interval reporting is restricted to this final robustness
+  outcome.
+- Across five post-hoc deterministic donor realizations under the same frozen
+  donor-construction rule, the mean CXT-Fish--F0 cross-composite effect
+  remained positive (+7.74 to +8.84 percentage points). These sensitivity
+  analyses do not replace the frozen seed-3407 result.
+- In the post-hoc F0-2RGB control, CXT-Fish exceeded an ordinary-RGB
+  two-view supervision-matched control by 6.75 percentage points on
+  cross-composite macro-F1 (95% exploratory interval, +5.66 to +7.85
+  percentage points), indicating that generic duplicated supervised exposure
+  alone does not explain the full robustness gain.
 - ResNet18 clean macro-F1 changes by -0.21 percentage points on average; a
   clean-accuracy improvement claim is not permitted.
 - DAR-flip is lower for CXT-Fish in all nine paired ResNet18 cells.
@@ -45,7 +57,8 @@ that must not be made after the frozen post-development confirmation.
   nested evaluation or method-selection-independent test.
 - Route C is a fixed two-stage mechanism control, not a faithful CLIB
   reproduction and not an exhaustive contrastive-learning comparison.
-- MobileNetV3 uses one registered seed and is not a second main confirmation.
+- MobileNetV3 uses one pre-specified/frozen seed and is not a second main
+  confirmation.
 - Group IDs are trajectory/group proxies, not verified biological individual
   identities.
 - The official Fish4Knowledge test set was not accessed.

@@ -1,7 +1,8 @@
 {
   "status": "complete",
   "protocol_commit": "11ecb6436e78af9a22c5141760ff7dceefc60bab",
-  "final_commit": "61b36a4fd833792b177c84c54b4f0db5183b8cb5",
+  "audit_source_head": "61b36a4fd833792b177c84c54b4f0db5183b8cb5",
+  "final_package_head_recorded_by_git": true,
   "donor_sensitivity_cells": 90,
   "donor_sensitivity_seeds": [
     4101,
