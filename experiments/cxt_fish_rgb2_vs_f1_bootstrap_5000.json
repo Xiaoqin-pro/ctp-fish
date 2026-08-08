@@ -1,0 +1,12 @@
+{
+  "point_estimate": 0.0675459055653601,
+  "ci95": [
+    0.05657995061958346,
+    0.07852750537830455
+  ],
+  "bootstrap_replicates": 5000,
+  "estimand": "equal_weight_cell_mean_F1_minus_F0_2RGB_cross_class_donor_context_composite_macro_f1",
+  "cluster_unit": "group_id",
+  "stratification": "within_fold_group_resampling",
+  "official_test_accessed": false
+}

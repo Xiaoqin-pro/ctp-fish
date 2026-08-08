@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import argparse
 from pathlib import Path
 
 import numpy as np
@@ -36,6 +37,9 @@ def bootstrap_cross_delta(cells: list[tuple[pd.DataFrame, pd.DataFrame]], replic
 
 
 def main() -> None:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--reuse-bootstrap", action="store_true")
+    args = parser.parse_args()
     rgb_root = ROOT / "outputs/cxt_fish/rgb2_control_outer_evaluation"
     f1_root = ROOT / "outputs/cxt_fish/final_outer_evaluation"
     rows = []; cells = []
@@ -47,9 +51,23 @@ def main() -> None:
             if rgb_payload.get("official_test_accessed") is not False or f1_payload.get("official_test_accessed") is not False: raise RuntimeError("Official TEST flag violation")
             for method, payload in (("F0_2RGB", rgb_payload), ("CXT-Fish", f1_payload)):
                 metrics = payload["metrics"]; rows.append({"fold": fold, "seed": seed, "method": method, "clean_macro_f1": metrics["original"]["macro_f1"], "foreground_macro_f1": metrics["foreground"]["macro_f1"], "same_composite_macro_f1": metrics["same_swap"]["macro_f1"], "cross_composite_macro_f1": metrics["cross_swap"]["macro_f1"], "dar_flip": metrics["context"]["dar_flip"], "agreement": metrics["context"]["prediction_agreement"]})
-            cells.append((pd.read_csv(rgb_path.parent / "per_image.csv"), pd.read_csv(f1_path.parent / "per_image.csv")))
-    frame = pd.DataFrame(rows); summary = frame.groupby("method").mean(numeric_only=True).reset_index(); summary.to_csv(ROOT / "experiments/cxt_fish_rgb2_control_summary.csv", index=False); frame.to_csv(ROOT / "experiments/cxt_fish_rgb2_control_per_cell.csv", index=False)
-    bootstrap = bootstrap_cross_delta(cells); (ROOT / "experiments/cxt_fish_rgb2_vs_f1_bootstrap_5000.json").write_text(json.dumps(bootstrap, indent=2), encoding="utf-8")
+            rgb_frame = pd.read_csv(rgb_path.parent / "per_image.csv")
+            f1_frame = pd.read_csv(f1_path.parent / "per_image.csv")
+            keys = ["image_path", "group_id", "target"]
+            if not rgb_frame[keys].equals(f1_frame[keys]):
+                raise RuntimeError(f"Paired RGB2/F1 rows differ at fold={fold}, seed={seed}")
+            cells.append((rgb_frame, f1_frame))
+    frame = pd.DataFrame(rows)
+    metric_columns = ["clean_macro_f1", "foreground_macro_f1", "same_composite_macro_f1", "cross_composite_macro_f1", "dar_flip", "agreement"]
+    summary = frame.groupby("method")[metric_columns].mean().reset_index()
+    summary.to_csv(ROOT / "experiments/cxt_fish_rgb2_control_summary.csv", index=False)
+    frame.to_csv(ROOT / "experiments/cxt_fish_rgb2_control_per_cell.csv", index=False)
+    bootstrap_path = ROOT / "experiments/cxt_fish_rgb2_vs_f1_bootstrap_5000.json"
+    if args.reuse_bootstrap and bootstrap_path.is_file():
+        bootstrap = json.loads(bootstrap_path.read_text(encoding="utf-8"))
+    else:
+        bootstrap = bootstrap_cross_delta(cells)
+        bootstrap_path.write_text(json.dumps(bootstrap, indent=2), encoding="utf-8")
     report = ["# F0-2RGB reviewer control", "", "This is a post-hoc supervision- and compute-matched mechanism control. It is not a new confirmatory endpoint and does not alter the frozen CXT-Fish result.", "", "| Method | Clean | Foreground | Same composite | Cross composite | DAR-flip | Agreement |", "|---|---:|---:|---:|---:|---:|---:|"]
     for row in summary.itertuples(index=False): report.append(f"| {row.method} | {row.clean_macro_f1:.4f} | {row.foreground_macro_f1:.4f} | {row.same_composite_macro_f1:.4f} | {row.cross_composite_macro_f1:.4f} | {row.dar_flip:.4f} | {row.agreement:.4f} |")
     report += ["", f"Exploratory post-hoc CXT-Fish minus F0-2RGB cross-composite cell-mean delta: {bootstrap['point_estimate']:+.4f}, 95% interval [{bootstrap['ci95'][0]:+.4f}, {bootstrap['ci95'][1]:+.4f}].", "Official TEST accessed: false."]
