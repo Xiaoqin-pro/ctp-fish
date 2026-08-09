@@ -123,6 +123,9 @@ def build() -> None:
     # Remove the inherited manual page break so the short reproducibility table
     # is not separated from its heading by a sparse page.
     d.paragraphs[148].paragraph_format.page_break_before = None
+    # Start the short reproducibility section with its table rather than leaving
+    # its heading and a few lines stranded at the foot of the preceding page.
+    d.paragraphs[146].paragraph_format.page_break_before = True
     for row in d.tables[4].rows:
         if row.cells and row.cells[0].text.strip() == "Cross-class composite macro-F1":
             row.cells[-1].text = "Conditional bootstrap interval: +6.13 to +8.20 pp"
@@ -140,6 +143,15 @@ def build() -> None:
     if ref_anchor is not None:
         insert_after(ref_anchor, "Lopez-Paz D, Bottou L, Schölkopf B, Vapnik V (2016) Unifying distillation and privileged information. In: International Conference on Learning Representations.")
         insert_after(ref_anchor, "Vapnik VN, Vashist A (2009) A new learning paradigm: learning using privileged information. Neural Networks 22:544–557. https://doi.org/10.1016/j.neunet.2009.06.042")
+
+    # Apply final pagination controls after all insertions have stabilized
+    # paragraph indices.
+    for p in d.paragraphs:
+        if p.text.startswith("7 Reproducibility and data/code availability"):
+            p.paragraph_format.page_break_before = None
+            p.paragraph_format.keep_with_next = False
+        elif p.text.startswith("Table 9 Key reproducibility assets"):
+            p.paragraph_format.page_break_before = None
 
     # Replace embedded figures with reproducible, corrected outputs.
     d.save(OUT)
