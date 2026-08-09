@@ -1,0 +1,3 @@
+metric,F0_mean,F0_sd,F1_mean,F1_sd,delta_pp,delta_sd_pp,favourable_cells,n_cells,estimand,official_test_accessed
+group_balanced_accuracy,0.6979015862794642,0.02779636831483238,0.7425916092803164,0.016102332767855245,4.469002300085221,3.1250377426824705,8,9,equal-weight nine cell mean of fold-seed group-weighted accuracy differences,False
+species_group_balanced_accuracy,0.5271083807604295,0.015646447254878133,0.5943919470899744,0.026883138022143437,6.7283566329544975,2.5760330246812573,9,9,equal-weight nine cell mean of fold-seed group-weighted accuracy differences,False
