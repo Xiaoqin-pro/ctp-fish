@@ -27,8 +27,7 @@
 
 ## Document render checks
 
-- Main DOCX: 18 pages, every page inspected.
+- Main DOCX: 17 pages, every page inspected.
 - Supplementary DOCX: 2 pages, every page inspected.
 - No page contains a detached figure caption, clipped table text, or missing
   embedded image.
-

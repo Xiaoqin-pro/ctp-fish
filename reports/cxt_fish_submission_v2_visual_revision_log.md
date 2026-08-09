@@ -29,7 +29,7 @@ claim was changed.
 ## QA
 
 - Full repository tests: 88 passed.
-- Manuscript rendered with the installed Word engine: 18 pages inspected at
+- Manuscript rendered with the installed Word engine: 17 pages inspected at
   120 dpi; no clipped figures, table overflow, or broken captions observed.
 - Supplement rendered with the installed Word engine: 2 pages inspected at
   120 dpi; S4 is kept intact on one page and S8 retains its caption.
@@ -41,4 +41,3 @@ figure skill, SciencePlots, cnsplots, and AcademicForge scientific-visualization
 guidance. IMTS examples were checked for their compact systems schematics and
 clear multi-panel data figures. These references informed visual conventions
 only; no third-party artwork was copied into the manuscript.
-
