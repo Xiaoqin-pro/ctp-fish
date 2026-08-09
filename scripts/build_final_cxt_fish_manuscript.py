@@ -12,8 +12,8 @@ from docx.text.paragraph import Paragraph
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = Path(r"E:\xiazai\google\CXT-Fish_IMTS_Final_ConstructValidity_Manuscript.docx")
-OUT = ROOT / "paper" / "CXT-Fish_IMTS_Final_ConstructValidity_Manuscript_revised.docx"
-FIG_DIR = ROOT / "reports" / "figures" / "manuscript_final"
+OUT = ROOT / "paper" / "CXT-Fish_IMTS_Submission_Ready_v2.docx"
+FIG_DIR = ROOT / "reports" / "figures" / "manuscript_submission_v2"
 
 
 def replace_paragraph(d: Document, index: int, text: str) -> None:
@@ -30,10 +30,27 @@ def insert_after(p: Paragraph, text: str, style: str = "Normal") -> Paragraph:
     return new_para
 
 
+def replace_text_in_runs(d: Document, old: str, new: str) -> None:
+    """Replace a short metadata string without disturbing paragraph layout."""
+    parts = list(d.paragraphs)
+    parts.extend(cell.paragraphs for table in d.tables for row in table.rows for cell in row.cells)
+    for section in d.sections:
+        parts.extend(section.header.paragraphs)
+        parts.extend(section.footer.paragraphs)
+    for group in parts:
+        for p in group if isinstance(group, list) else [group]:
+            for run in p.runs:
+                if old in run.text:
+                    run.text = run.text.replace(old, new)
+
+
 def build() -> None:
     OUT.parent.mkdir(parents=True, exist_ok=True)
     shutil.copy2(SOURCE, OUT)
     d = Document(OUT)
+
+    # Updated correspondence metadata requested for the submission-ready version.
+    replace_text_in_runs(d, "3497925919@qq.com", "xiao.qin@sdust.edu.cn")
 
     replace_paragraph(d, 5,
         "Underwater fish-recognition benchmarks derived from video contain correlated observations that can blur the distinction between frame recognition and generalization to new recorded groups. We audit this issue in Fish4Knowledge and construct F4K-16T, comprising 27,133 images from 16 species selected under a fixed minimum-recorded-group criterion. The protocol combines recorded-group-disjoint evaluation with foreground and donor-context interventions that probe predictive non-subject/contextual signals. We instantiate a simple label-level foreground-sufficiency objective: a shared classifier predicts the species from both the ordinary RGB image and a mask-derived view with suppressed surrounding detail, while inference remains one ordinary RGB image and one forward pass. After the method definitions were fixed, we conducted a three-fold group-disjoint re-evaluation on the same Fish4Knowledge-derived corpus previously used during method development. CXT-Fish increased cross-class donor-context-composite macro-F1 from 0.5189 to 0.5913. The equal-weight paired improvement was 7.24 percentage points, with a conditional paired group-cluster bootstrap 95% interval of 6.13–8.20 points; mean clean macro-F1 changed from 0.9577 to 0.9556. Post-hoc controls showed positive effects across five additional deterministic donor assignments, a +6.83-point advantage over an ordinary-RGB two-view control (exploratory interval, +5.71–+7.87), and a +10.48-point difference after donor-subject suppression under the same frozen pairings (exploratory interval, +9.38–+11.61). These results support foreground sufficiency as a targeted intervention for the tested synthetic, mask-defined context perturbations rather than as a general clean-accuracy, context-invariance, or external-domain solution.")
@@ -103,6 +120,9 @@ def build() -> None:
     replace_paragraph(d, 109, "Fig. 7 Post-hoc validity controls. (a) The CXT-Fish minus F0 cross-class effect remains positive for the frozen seed-3407 donor assignment and five alternative deterministic donor realizations. (b) F0-2RGB nearly matches clean performance but not the donor-context robustness of CXT-Fish. (c) The CXT-Fish–F0 effect remains positive after donor-subject suppression under frozen pairings. These controls are post-hoc and exploratory; they do not constitute independent validation.")
 
     # Keep table terminology aligned with the manuscript-level estimand.
+    # Remove the inherited manual page break so the short reproducibility table
+    # is not separated from its heading by a sparse page.
+    d.paragraphs[148].paragraph_format.page_break_before = None
     for row in d.tables[4].rows:
         if row.cells and row.cells[0].text.strip() == "Cross-class composite macro-F1":
             row.cells[-1].text = "Conditional bootstrap interval: +6.13 to +8.20 pp"

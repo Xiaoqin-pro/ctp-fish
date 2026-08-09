@@ -11,12 +11,15 @@ from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.shared import Inches, Pt
 
 ROOT = Path(__file__).resolve().parents[1]
-OUT = ROOT / "paper" / "CXT-Fish_IMTS_Supplementary_Material.docx"
+OUT = ROOT / "paper" / "CXT-Fish_IMTS_Supplementary_Material_v2.docx"
 
 
 def set_cell(cell, text: str, bold: bool = False, size: int = 8):
     cell.text = ""
     p = cell.paragraphs[0]
+    p.paragraph_format.space_before = Pt(0)
+    p.paragraph_format.space_after = Pt(0)
+    p.paragraph_format.line_spacing = 1.0
     r = p.add_run(str(text))
     r.bold = bold
     r.font.size = Pt(size)
@@ -45,8 +48,11 @@ def build():
     sec.left_margin = Inches(0.65); sec.right_margin = Inches(0.65)
     styles = doc.styles
     styles["Normal"].font.name = "Arial"; styles["Normal"].font.size = Pt(9)
+    styles["Normal"].paragraph_format.space_after = Pt(2)
     for name in ["Heading 1", "Heading 2", "Heading 3"]:
         styles[name].font.name = "Arial"
+        styles[name].paragraph_format.space_before = Pt(6)
+        styles[name].paragraph_format.space_after = Pt(2)
     p = doc.add_paragraph(); p.alignment = WD_ALIGN_PARAGRAPH.CENTER
     r = p.add_run("Supplementary Material\nCXT-Fish: Group-Disjoint Evaluation and Foreground-Sufficiency Training for Context-Robust Underwater Fish Recognition")
     r.bold = True; r.font.size = Pt(14)
@@ -77,7 +83,8 @@ def build():
     add_table(doc, ["Donor species", "Recipients", "Fraction", "Donor groups", "Correctness effect"], drows, [1.2, 1.1, 0.9, 1.1, 1.3], size=7)
     doc.add_paragraph("Table S3. Frozen seed-3407 donor-species audit. The donor-species-equal-weight correctness sensitivity is +3.71 percentage points; this is descriptive and not a replacement for the natural-manifest-weighted main result.")
 
-    doc.add_heading("S4. MobileNetV3-Large fold-level sensitivity", level=1)
+    p_s4 = doc.add_heading("S4. MobileNetV3-Large fold-level sensitivity", level=1)
+    p_s4.paragraph_format.page_break_before = True
     m = pd.read_csv(ROOT / "experiments" / "cxt_fish_mobilenet_per_fold_results.csv")
     mrows = []
     for fold in sorted(m.fold.unique()):
@@ -96,6 +103,7 @@ def build():
         "Route C: fixed mechanism stress control, not faithful CLIB reproduction and not an exhaustive contrastive-learning comparison; detailed values are in Supplementary Note S6.",
         "Higher acquisition units (camera/session/deployment/date) were not verifiable from frozen recognition metadata.",
         "Official Fish4Knowledge TEST accessed: false.",
+        "The repository retains stopped TCCR, DTH, donor-aware, TRAFS, CIR, DLE, TAP, and CXT-Select explorations as negative-result records.",
     ]
     for n in notes: doc.add_paragraph(n, style="List Bullet")
     doc.add_heading("S6. Route C mechanism stress control", level=1)
@@ -113,11 +121,8 @@ def build():
     s8rows = []
     for _, x in d.iterrows():
         s8rows.append([x["donor_species"], int(x["n_recipients"]), int(x["unique_donor_groups"]), f"{x['f0_correct']:.3f}", f"{x['cxt_correct']:.3f}", f"{x['effect']*100:+.2f} pp"])
-    add_table(doc, ["Donor species", "Recipients", "Donor groups", "F0 correctness", "CXT-Fish correctness", "Delta (pp)"], s8rows, [1.1, 1.0, 1.0, 1.1, 1.3, 0.9], size=7)
+    add_table(doc, ["Donor species", "Recipients", "Donor groups", "F0 correctness", "CXT-Fish correctness", "Delta (pp)"], s8rows, [1.1, 1.0, 1.0, 1.1, 1.3, 0.9], size=6)
     doc.add_paragraph("Table S8. Donor-species equal-weight correctness sensitivity. Species are weighted equally for this descriptive audit; the natural-manifest-weighted main result remains primary.")
-
-    doc.add_heading("S9. Negative-result index", level=1)
-    doc.add_paragraph("The public repository retains the stopped TCCR, DTH, donor-aware, TRAFS, CIR, DLE, TAP, and CXT-Select explorations. They are not presented as successful methods and are included only to document the pre-specified stopping logic and the boundary of the final foreground-sufficiency claim.")
 
     doc.save(OUT)
     print(OUT)
