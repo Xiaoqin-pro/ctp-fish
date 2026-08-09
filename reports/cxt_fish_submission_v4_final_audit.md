@@ -8,8 +8,8 @@ Scope: final wording, evidence-tier, figure-label, reference, and artifact-bound
 
 | Artifact | SHA-256 |
 |---|---|
-| `paper/CXT-Fish_IMTS_Submission_Ready_v4.docx` | `5e0e36b577bf686c7f375e7c0c8636374fed4389799edb52771af4e535a2d136` |
-| `paper/CXT-Fish_IMTS_Submission_Ready_v4.pdf` | `3aa980a4adb444c110daac6e14659a284123b7f651c70da07a557f9b98b9fd6d` |
+| `paper/CXT-Fish_IMTS_Submission_Ready_v4.docx` | `8f6032f29f2e616bac30a02be14a249902858a0c7ca63007c7132726151a3f8e` |
+| `paper/CXT-Fish_IMTS_Submission_Ready_v4.pdf` | `4c2b4287c281107a7cf1894680be7fda7fcd92690742ef64c7b6847e27e7a23a` |
 | `paper/CXT-Fish_IMTS_Supplementary_Material_v2.docx` | `2fed83ab84dd3533dc5d8e0cea9b3df773ccdfc4f2628735eb7a7ceca9d74a67` |
 | `reports/figures/manuscript_submission_v3/fig6_main_results.png` | `f5361b24decc10e745462b70159c52ae88c2aac699ece6a0759f150e36938b0d` |
 
@@ -20,6 +20,8 @@ Scope: final wording, evidence-tier, figure-label, reference, and artifact-bound
 | Huang et al. (2015) trajectory-aware prior added and cited | PASS |
 | No claim that group-disjoint Fish4Knowledge evaluation is the first trajectory-aware split | PASS |
 | Fig. 6(b) label reports `same-class composite` for `+0.62 pp` | PASS |
+| Table 2 uses `fine-context suppression` rather than subject-only language | PASS |
+| §3.5 uses `separately label-predictive` rather than `independently label-predictive` | PASS |
 | Foreground sufficiency defined operationally, without a subject-only proof claim | PASS |
 | Foreground-only/background-only, augmentation, donor alignment, and split construction defined | PASS |
 | Bootstrap conditions identify recipient recorded group as the cluster unit | PASS |

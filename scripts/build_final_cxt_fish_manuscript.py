@@ -159,6 +159,16 @@ def build() -> None:
         "Because the main macro-F1 is class-balanced but image-weighted within species, we additionally computed a post-hoc group-weighted robustness sensitivity from the frozen per-image predictions. For cross-class composites, recorded-group-balanced accuracy changed from 0.6979 ± 0.0278 for F0 to 0.7426 ± 0.0161 for CXT-Fish, an equal-weight nine-cell difference of +4.47 percentage points (8/9 favourable cells). A stricter species–group-balanced accuracy changed from 0.5271 ± 0.0156 to 0.5944 ± 0.0269, a +6.73-point difference (9/9 favourable cells). These are descriptive sensitivity estimands, not replacements for the primary macro-F1 result; the full cell table and definitions are in Supplementary Table S1.")
 
     replace_text_in_runs(d, "not replacements for the primary macro-F1 result", "not replacements for the main frozen macro-F1 result")
+    replace_text_in_runs(d, "remains independently label-predictive", "remains separately label-predictive")
+
+    # Keep the diagnostic question aligned with the operational meaning of
+    # foreground sufficiency: fine surrounding detail is suppressed, rather
+    # than all non-subject information being removed.
+    for table in d.tables:
+        for row in table.rows:
+            if row.cells and row.cells[0].text.strip() == "Foreground-sufficient":
+                if len(row.cells) >= 3:
+                    row.cells[2].text = "Does label predictiveness persist after fine-context suppression?"
 
     # Add verified privileged-information references before the declarations block.
     ref_anchor = next((p for p in d.paragraphs if p.text.startswith("Zhao J, Dong X")), None)

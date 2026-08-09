@@ -10,5 +10,6 @@ This revision responds to the final reviewer-consensus checklist without adding 
 6. **Table 8:** stated that differences are computed from unrounded cell-level values and retained the one-seed architecture-sensitivity boundary.
 7. **Data availability:** clarified the public code/manifest/summary boundary and the need for authorized local Fish4Knowledge data for complete training or per-image replay; trained checkpoints and full per-image outputs are not redistributed.
 8. **Final audit:** added `reports/cxt_fish_submission_v4_final_audit.md`, including v4 hashes, rendering checks, evidence-role checks, and the 88-test result.
+9. **Terminology alignment:** changed the Table 2 diagnostic question to fine-context suppression and changed the §3.5 phrase to `separately label-predictive`, avoiding a subject-only or independence interpretation.
 
 No model, checkpoint, prediction, metric, split, donor assignment, or official TEST access was changed in v4.
