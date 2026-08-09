@@ -12,7 +12,7 @@ from docx.text.paragraph import Paragraph
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = Path(r"E:\xiazai\google\CXT-Fish_IMTS_Final_ConstructValidity_Manuscript.docx")
-OUT = ROOT / "paper" / "CXT-Fish_IMTS_Submission_Ready_v2.docx"
+OUT = ROOT / "paper" / "CXT-Fish_IMTS_Submission_Ready_v3.docx"
 FIG_DIR = ROOT / "reports" / "figures" / "manuscript_submission_v2"
 
 
@@ -82,7 +82,7 @@ def build() -> None:
     replace_paragraph(d, 97,
         "Fig. 6 Main same-corpus frozen ResNet18 re-evaluation. (a) Mean macro-F1 across ordinary, foreground-sufficient, same-class-composite, and cross-class-composite views. (b) Equal-weight paired effects across nine fold–seed cells. The cross-class donor-context-composite difference is accompanied by the manuscript's conditional 5,000-replicate paired group-cluster bootstrap interval; lower DAR-flip is favourable.")
     replace_paragraph(d, 95,
-        "The effect was substantially larger under conflicting donor context. Cross-class donor-context-composite macro-F1 increased from 0.5189 to 0.5913. The equal-weight paired improvement was 7.24 percentage points, and the 5,000-replicate paired group-cluster bootstrap gave a conditional paired group-cluster bootstrap 95% interval of +6.13 to +8.20 points. Eight of nine cells improved. DAR-flip decreased from 0.2146 to 0.1792 and was lower for CXT-Fish in all nine paired cells. The main frozen result is therefore reduced susceptibility to conflicting donor context, not improved ordinary-view recognition (Table 5; Fig. 6).")
+        "The effect was substantially larger under conflicting donor context. Cross-class donor-context-composite macro-F1 increased from 0.5189 to 0.5913. The equal-weight paired improvement was 7.24 percentage points. The 5,000-replicate paired group-cluster bootstrap yielded a conditional 95% interval of +6.13 to +8.20 points. Eight of nine cells improved. DAR-flip decreased from 0.2146 to 0.1792 and was lower for CXT-Fish in all nine paired cells. The main frozen result is therefore reduced susceptibility to conflicting donor context, not improved ordinary-view recognition (Table 5; Fig. 6).")
 
     replace_paragraph(d, 101,
         "The frozen seed-3407 donor assignment yielded the manuscript effect of +7.24 points. Using the same frozen checkpoints and donor-construction mechanism, all five alternative deterministic donor realizations produced positive equal-weight effects: +8.00, +8.84, +8.45, +7.98, and +7.74 points for seeds 4101–4105. The mean effect across the five alternatives was +8.20 points (SD 0.44), with four realizations favourable in eight of nine cells and one in all nine cells. These are post-hoc donor-realization sensitivity results, not a second primary endpoint.")
@@ -134,15 +134,60 @@ def build() -> None:
             row.cells[1].text = "Conditional main bootstrap interval"
 
     # Add the two requested no-training analyses after all index-based edits.
+    # Normalize the wording after the post-hoc paragraph is inserted below.
     p95 = d.paragraphs[95]
     insert_after(p95,
         "Because the main macro-F1 is class-balanced but image-weighted within species, we additionally computed a post-hoc group-weighted robustness sensitivity from the frozen per-image predictions. For cross-class composites, recorded-group-balanced accuracy changed from 0.6979 ± 0.0278 for F0 to 0.7426 ± 0.0161 for CXT-Fish, an equal-weight nine-cell difference of +4.47 percentage points (8/9 favourable cells). A stricter species–group-balanced accuracy changed from 0.5271 ± 0.0156 to 0.5944 ± 0.0269, a +6.73-point difference (9/9 favourable cells). These are descriptive sensitivity estimands, not replacements for the primary macro-F1 result; the full cell table and definitions are in Supplementary Table S1.")
+
+    replace_text_in_runs(d, "not replacements for the primary macro-F1 result", "not replacements for the main frozen macro-F1 result")
 
     # Add verified privileged-information references before the declarations block.
     ref_anchor = next((p for p in d.paragraphs if p.text.startswith("Zhao J, Dong X")), None)
     if ref_anchor is not None:
         insert_after(ref_anchor, "Lopez-Paz D, Bottou L, Schölkopf B, Vapnik V (2016) Unifying distillation and privileged information. In: International Conference on Learning Representations.")
         insert_after(ref_anchor, "Vapnik VN, Vashist A (2009) A new learning paradigm: learning using privileged information. Neural Networks 22:544–557. https://doi.org/10.1016/j.neunet.2009.06.042")
+
+    # Reorder only the explicit Reference-style paragraphs and the two added
+    # references; declarations and other manuscript text are never touched.
+    ref_heading = next((p for p in d.paragraphs if p.text.strip() == "References"), None)
+    if ref_heading is not None:
+        paras = d.paragraphs
+        start = next((i for i, p in enumerate(paras) if p._p is ref_heading._p), None)
+        if start is not None:
+            ref_paras = [
+                p for p in paras[start + 1:]
+                if p.style.name == "Reference" or p.text.startswith(("Lopez-Paz", "Vapnik"))
+            ]
+            if ref_paras:
+                parent = ref_paras[0]._p.getparent()
+                for p in ref_paras:
+                    parent.remove(p._p)
+                for p in sorted(ref_paras, key=lambda p: p.text.strip().casefold()):
+                    parent.append(p._p)
+
+    # Final page-flow controls for the two short tables called out during QA.
+    # Table 3 must follow its section heading rather than being pushed away by
+    # a stale manual break; Table 7 is moved as a complete short table.
+    for p in d.paragraphs:
+        if p.text.strip() == "Table 3 Frozen implementation settings":
+            p.paragraph_format.page_break_before = None
+            p.paragraph_format.keep_with_next = True
+        elif p.text.strip().startswith("3.10 Implementation details"):
+            p.paragraph_format.page_break_before = None
+            p.paragraph_format.keep_with_next = True
+        elif p.text.strip().startswith("4.6 Generic two-view supervision"):
+            p.paragraph_format.page_break_before = True
+            p.paragraph_format.keep_with_next = True
+        elif p.text.strip().startswith("Table 7 Post-hoc"):
+            p.paragraph_format.page_break_before = None
+            p.paragraph_format.keep_with_next = True
+
+    if len(d.tables) > 6:
+        table7 = d.tables[6]
+        for row in table7.rows:
+            tr_pr = row._tr.get_or_add_trPr()
+            if not any(child.tag.endswith("cantSplit") for child in tr_pr):
+                tr_pr.append(OxmlElement("w:cantSplit"))
 
     # Apply final pagination controls after all insertions have stabilized
     # paragraph indices.
