@@ -17,7 +17,7 @@ from matplotlib.patches import FancyArrowPatch, Polygon, Rectangle, Ellipse
 
 ROOT = Path(__file__).resolve().parents[1]
 EXP = ROOT / "experiments"
-OUT = ROOT / "reports" / "figures" / "manuscript_submission_v2"
+OUT = ROOT / "reports" / "figures" / "manuscript_submission_v3"
 OUT.mkdir(parents=True, exist_ok=True)
 
 INK = "#1d2a35"
@@ -298,7 +298,7 @@ def fig6_main() -> None:
                 bbox={"boxstyle": "round,pad=0.10", "fc": "white", "ec": "none", "alpha": 0.82})
     # b: focal effect + guardrails
     ax = axs[1]; panel(ax, "b")
-    names = ["cross-class\ncomposite", "group-balanced\naccuracy", "tail F1", "clean", "DAR-flip"]
+    names = ["cross-class\ncomposite", "same-class\ncomposite", "tail F1", "clean", "DAR-flip"]
     delta = np.array([7.24, 0.62, 0.26, -0.21, -3.54])
     cols = [TEAL, TEAL, TEAL, BURGUNDY, TEAL]
     y = np.arange(len(names))[::-1]

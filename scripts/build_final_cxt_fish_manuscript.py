@@ -12,8 +12,8 @@ from docx.text.paragraph import Paragraph
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = Path(r"E:\xiazai\google\CXT-Fish_IMTS_Final_ConstructValidity_Manuscript.docx")
-OUT = ROOT / "paper" / "CXT-Fish_IMTS_Submission_Ready_v3.docx"
-FIG_DIR = ROOT / "reports" / "figures" / "manuscript_submission_v2"
+OUT = ROOT / "paper" / "CXT-Fish_IMTS_Submission_Ready_v4.docx"
+FIG_DIR = ROOT / "reports" / "figures" / "manuscript_submission_v3"
 
 
 def replace_paragraph(d: Document, index: int, text: str) -> None:
@@ -62,22 +62,35 @@ def build() -> None:
 
     replace_paragraph(d, 23,
         "Training-time privileged information is a broader learning setting in which auxiliary information is available during learning but absent at prediction (Vapnik and Vashist 2009; Lopez-Paz et al. 2016). Foreground masking, subject–context recomposition, and background perturbation are established ways to probe or reduce contextual reliance (Torralba and Efros 2011; Geirhos et al. 2020; Xiao et al. 2021). In underwater fish recognition, CLIB is a close domain-specific contrastive approach that uses subject/background views to reduce background influence (Yan et al. 2024). We therefore do not claim the first use of segmentation-derived training information, foreground/context manipulation, or contrastive learning. The narrower distinction here is a label-level sufficiency objective coupled to a recorded-group-aware reliability protocol and a layered construct-validity package. The objective does not force original and foreground representations to coincide, and the paper does not infer that label-level supervision is generally superior to contrastive learning.")
+    replace_text_in_runs(d, "In underwater fish recognition, CLIB", "Earlier live-fish recognition work already used trajectory-aware separation to keep images from one trajectory sequence out of both training and testing, together with trajectory-level voting (Huang et al. 2015). In underwater fish recognition, CLIB")
     replace_paragraph(d, 33, "3.2 Evidence stages and same-corpus group-disjoint re-evaluation")
     replace_paragraph(d, 35,
         "For each outer fold, held-out evaluation groups are disjoint from all groups used to fit the model and select its checkpoint in that fold. Test-fold images are never used for optimization or checkpoint selection. We therefore call the main experiment a same-corpus frozen group-disjoint re-evaluation: it estimates robustness across held-out recorded groups after the method definitions were fixed, but it is not method-development-independent holdout validation, a fully blind nested evaluation, or independent external validation. Historical development and the final folds are partitions of the same Fish4Knowledge-derived corpus, so this evidence boundary is stated explicitly.")
+    replace_paragraph(d, 35,
+        "The three outer folds are loaded from the frozen group manifest using its fixed split seed. For each fold, the designated test groups are held out first. The remaining groups are partitioned into outer-train and fold-local inner-development groups by stable hash ordering separately within each species, using the fixed 0.15 inner-development fraction with at least one development group and at least one fitting group per species. Outer-train, inner-development, and outer-test groups are mutually disjoint, and both fitting and inner-development manifests contain all 16 frozen species. The same fold-local manifests are shared by F0 and CXT-Fish; model seeds do not change the split. Held-out evaluation groups are therefore disjoint from all groups used to fit the model and select its checkpoint in that fold. Test-fold images are never used for optimization or checkpoint selection. We call the main experiment a same-corpus frozen group-disjoint re-evaluation: it estimates robustness across held-out recorded groups after the method definitions were fixed, but it is not method-development-independent holdout validation, a fully blind nested evaluation, or independent external validation. Historical development and the final folds are partitions of the same Fish4Knowledge-derived corpus, so this evidence boundary is stated explicitly.")
     replace_paragraph(d, 37,
         "Fig. 2 Group-aware evaluation changes the performance estimate. (a) Mean macro-F1 and group-balanced accuracy under image-level and group-disjoint splitting. (b) Head, mid, and tail per-class F1. (c) Same-group nearest-neighbour fractions across the two protocols.")
+    replace_paragraph(d, 45,
+        "Let x_r denote a recipient image, x_d a donor image, m_r the feathered recipient mask, and R(.) the deterministic resizing/alignment operation that maps the donor to the recipient canvas. In the frozen implementation, both images are converted to RGB, the donor is directly resized to the recipient width and height with PIL bilinear interpolation without aspect-ratio padding, and the recipient mask is resized with nearest-neighbour interpolation before Gaussian feathering. The uint8 composite is rounded and clipped on the recipient canvas before ordinary resizing, tensor conversion, and ImageNet normalization. The donor-context composite is constructed as x_dc = m_r * x_r + (1 - m_r) * R(x_d). For each recipient and intervention type, exactly one donor is selected from the same held-out outer fold. Same-class donors share the recipient species but have a different recorded group; cross-class donors have both a different species and a different recorded group.")
+    replace_paragraph(d, 40,
+        "The diagnostic views were defined before fitting their separate classifiers. Foreground-only retains RGB pixels inside the official subject mask and replaces the outside region with the fixed foreground-view construction used for CXT-Fish, namely Gaussian-blurred RGB with a three-pixel feather. Background-only suppresses the annotated subject region according to the frozen matched-view construction while retaining the non-primary region; it is evaluated with a separately trained diagnostic classifier. Constant-fill replaces the annotated subject region with neutral RGB (128,128,128); inpainted background applies OpenCV Telea inpainting with radius 3 after one 3 x 3 elliptical dilation of the mask; shuffled-mask background fills the non-primary region using a deterministically assigned mask from a different recorded group; mask-only copies the official binary fish mask into three channels; and geometry-only uses six normalized mask-box features: width, height, area, centre x, centre y, and aspect ratio. These separate models quantify information available in each constructed view rather than the response of the ordinary-RGB F0 model to an out-of-distribution input.")
     replace_paragraph(d, 42,
         "Fig. 3 Context-diagnostic sanity checks on the historical development validation partition. Several views retain substantial predictive non-subject/contextual signal. We reserve the stronger shortcut-susceptibility interpretation for the conflicting-context interventions rather than treating every contextual cue as ecologically spurious.")
     replace_paragraph(d, 86,
         "The near-equality of constant-fill and shuffled-mask conditions argues against the recipient fish-hole shape being the sole source of the background diagnostic signal. The lower but still substantial inpainted-background result is consistent with both residual environmental/camera context and artifacts induced by subject removal. These experiments demonstrate substantial predictive non-subject/contextual signal availability, but not a causal claim that the natural background alone determines species identity. We reserve the stronger shortcut-susceptibility interpretation for failures exposed by the conflicting-context interventions (Fig. 3).")
 
+    replace_paragraph(d, 53,
+        "For an RGB training sample x, the auxiliary foreground view x_fg is constructed from the same paired geometric augmentation as the ordinary view, then retains the official subject-mask pixels while replacing the outside region with the fixed Gaussian-blurred RGB context and three-pixel feather used throughout the frozen protocol. The shared classifier receives both views in one concatenated 2B forward. The objective is L = CE(f(x), y) + lambda_fg CE(f(x_fg), y), with lambda_fg = 1.0. Ordinary augmentation comprises RandomResizedCrop with scale 0.08–1.0 and aspect ratio 3/4–4/3, followed by a shared 0.5 horizontal flip and shared ColorJitter (brightness, contrast, saturation 0.1; hue 0.05), bilinear resize, tensor conversion, and ImageNet normalization. Foreground sufficiency is used operationally for this label-supervised context-suppressed view; it does not denote a formal proof that the foreground alone contains all predictive information.")
+    replace_paragraph(d, 54,
+        "Foreground sufficiency does not require original and foreground representations to coincide. Instead, it means that the context-suppressed view remains independently label-predictive under the auxiliary cross-entropy term. The term therefore describes the training intervention and its operational evaluation, not a formal subject-only identifiability claim.")
     replace_paragraph(d, 58,
         "The principal recognition summaries are macro-F1, tail-class F1, and group-balanced accuracy. Macro-F1 gives equal weight to species but remains image-weighted within each species; it is not an equal-weight recorded-group estimand. Tail classes are defined once from the frozen development frequency tiers. Group-balanced accuracy first averages correctness within each recorded group and then averages over groups, reducing domination by long recordings. Image-level accuracy and weighted F1 are retained as secondary descriptive measures. A post-hoc species–group-balanced robustness sensitivity is reported separately.")
     replace_paragraph(d, 61,
         "The frozen outer protocol recorded clean macro-F1, tail F1, and group-balanced accuracy as primary recognition metrics and donor-context quantities as secondary robustness measures. For the final manuscript synthesis, we report a conditional bootstrap interval for one focal robustness contrast: the paired difference in cross-class donor-context-composite macro-F1. We report this single interval rather than presenting a correlated family of robustness measures as independent inferential endpoints. This reporting focus does not upgrade the same-corpus design to independent validation.")
     replace_paragraph(d, 63,
         "Uncertainty is estimated with 5,000 paired group-cluster bootstrap replicates. Within every replicate, recorded groups are resampled with replacement separately within fold and ground-truth species. The same sampled groups are used for paired methods and across the three pre-specified seeds before macro-F1 is recomputed for each fold-seed cell; the nine paired cell differences are then averaged with equal weight. The resulting conditional paired group-cluster bootstrap interval quantifies held-out-group resampling uncertainty conditional on the completed development process, the frozen trained models and seeds, and the frozen seed-3407 donor realization. It does not estimate method-selection uncertainty, optimization-seed uncertainty, alternative donor-generation mechanisms, or external-dataset variability. The recorded-group counts for each fold × species stratum are reported in Supplementary Table S2 to make the finite-cluster structure explicit.")
+    replace_paragraph(d, 63,
+        "Uncertainty is estimated with 5,000 paired group-cluster bootstrap replicates. The cluster unit is the recipient recorded group; donor identities and donor reuse are held fixed through the complete frozen recipient-donor manifest rather than resampled as a second clustering dimension. Within every replicate, recipient recorded groups are resampled with replacement separately within fold and ground-truth species. The same sampled groups are used for paired methods and across the three pre-specified seeds before macro-F1 is recomputed for each fold-seed cell; the nine paired cell differences are then averaged with equal weight. The resulting conditional paired group-cluster bootstrap interval quantifies held-out-group resampling uncertainty conditional on the completed development process, the fixed outer-fold allocation and fold × species stratum sizes, the frozen trained checkpoints and three seeds, and the complete seed-3407 recipient-donor manifest. It does not estimate alternative fold assignments, method-selection uncertainty, optimization-seed population uncertainty, alternative donor-generation mechanisms, higher-level acquisition-unit variability, or external-dataset variability. The recorded-group counts for each fold × species stratum are reported in Supplementary Table S2 to make the finite-cluster structure explicit.")
     replace_paragraph(d, 64, "3.8 Post-hoc validity controls")
     replace_paragraph(d, 97,
         "Fig. 6 Main same-corpus frozen ResNet18 re-evaluation. (a) Mean macro-F1 across ordinary, foreground-sufficient, same-class-composite, and cross-class-composite views. (b) Equal-weight paired effects across nine fold–seed cells. The cross-class donor-context-composite difference is accompanied by the manuscript's conditional 5,000-replicate paired group-cluster bootstrap interval; lower DAR-flip is favourable.")
@@ -90,6 +103,8 @@ def build() -> None:
         "F0-2RGB nearly matched the clean performance of CXT-Fish (0.9551 versus 0.9556) while retaining duplicated supervised exposure, a concatenated 2B model forward, two cross-entropy terms, and comparable BatchNorm exposure. However, its cross-class donor-context-composite macro-F1 was 0.5230, compared with 0.5913 for CXT-Fish. The corrected observed equal-weight paired difference was +6.83 percentage points. A 5,000-replicate species-stratified paired group-cluster bootstrap, sharing each fold-level group draw across both methods and all three seeds, gave an exploratory conditional percentile interval of +5.71 to +7.87 points. The observed point estimate is computed from the nine paired fold-seed effects; this control is post-hoc and does not modify the main result.")
     replace_paragraph(d, 112,
         "We therefore repeated the frozen-pair evaluation after suppressing the donor subject while retaining the same recipient, donor assignment, recipient mask, checkpoint, and compositing geometry. The equal-weight CXT-Fish–F0 difference was +10.48 percentage points, with an exploratory 5,000-replicate conditional percentile interval of +9.38 to +11.61 points. All nine fold–seed cells remained positive, although the magnitude varied substantially across cells. A post-hoc donor-species-equal-weight correctness sensitivity also remained positive; detailed donor-species and residual-bin heterogeneity are reported in Supplementary Tables S7–S8. This analysis narrows the visible-donor-subject explanation but does not establish natural-background or external-domain robustness.")
+    replace_paragraph(d, 118,
+        "Table 8 Architecture-sensitivity summary. Values are means across the three outer folds for the one pre-specified MobileNet seed; differences are computed from unrounded cell-level values. MobileNet is architecture-sensitivity evidence only, with cross-class composite effects positive in 2/3 folds.")
     replace_paragraph(d, 119,
         "At the pre-specified MobileNet seed, foreground-sufficiency training improved mean foreground macro-F1 by 10.22 points and cross-class donor-context-composite macro-F1 by 4.82 points, while DAR-flip decreased by 4.73 points. Foreground improved in all three folds and DAR-flip decreased in all three; cross-class composite improved in two of three folds and decreased in one. However, ordinary-view macro-F1 decreased by 2.94 points and same-class-composite macro-F1 by 4.09 points. MobileNetV3-Large is therefore architecture-sensitivity evidence with heterogeneous cross-class effects, not cross-backbone validation or backbone-agnostic evidence (Table 8; Fig. 8).")
     replace_paragraph(d, 121,
@@ -119,13 +134,17 @@ def build() -> None:
     replace_paragraph(d, 92, "Table 5 Main same-corpus frozen ResNet18 group-disjoint re-evaluation across three folds × three seeds. Values are equal-weight means ± sample SD across the nine fold–seed cells. Paired differences are computed from unrounded cell-level values. The cross-class composite interval is the conditional paired group-cluster bootstrap interval reported for the focal robustness contrast.")
     replace_paragraph(d, 109, "Fig. 7 Post-hoc validity controls. (a) The CXT-Fish minus F0 cross-class effect remains positive for the frozen seed-3407 donor assignment and five alternative deterministic donor realizations. (b) F0-2RGB nearly matches clean performance but not the donor-context robustness of CXT-Fish. (c) The CXT-Fish–F0 effect remains positive after donor-subject suppression under frozen pairings. These controls are post-hoc and exploratory; they do not constitute independent validation.")
 
+    replace_text_in_runs(d,
+        "Code, configurations, split manifests, audit reports, figures, and compact result artifacts are publicly available at https://github.com/Xiaoqin-pro/ctp-fish.",
+        "Code, configurations, split manifests, audit reports, figures, and compact result artifacts are publicly available at https://github.com/Xiaoqin-pro/ctp-fish. The public repository does not redistribute trained checkpoints or full per-image prediction outputs; complete training and per-image replay additionally require an authorized local copy of the Fish4Knowledge-derived data under the original access terms.")
+
     # Keep table terminology aligned with the manuscript-level estimand.
     # Remove the inherited manual page break so the short reproducibility table
     # is not separated from its heading by a sparse page.
     d.paragraphs[148].paragraph_format.page_break_before = None
     # Start the short reproducibility section with its table rather than leaving
     # its heading and a few lines stranded at the foot of the preceding page.
-    d.paragraphs[146].paragraph_format.page_break_before = True
+    d.paragraphs[146].paragraph_format.page_break_before = None
     for row in d.tables[4].rows:
         if row.cells and row.cells[0].text.strip() == "Cross-class composite macro-F1":
             row.cells[-1].text = "Conditional bootstrap interval: +6.13 to +8.20 pp"
@@ -147,6 +166,9 @@ def build() -> None:
         insert_after(ref_anchor, "Lopez-Paz D, Bottou L, Schölkopf B, Vapnik V (2016) Unifying distillation and privileged information. In: International Conference on Learning Representations.")
         insert_after(ref_anchor, "Vapnik VN, Vashist A (2009) A new learning paradigm: learning using privileged information. Neural Networks 22:544–557. https://doi.org/10.1016/j.neunet.2009.06.042")
 
+    if ref_anchor is not None:
+        insert_after(ref_anchor, "Huang PX, Boom BJ, Fisher RB (2015) Hierarchical classification with reject option for live fish recognition. Machine Vision and Applications 26(1):89–102. https://doi.org/10.1007/s00138-014-0641-2")
+
     # Reorder only the explicit Reference-style paragraphs and the two added
     # references; declarations and other manuscript text are never touched.
     ref_heading = next((p for p in d.paragraphs if p.text.strip() == "References"), None)
@@ -156,7 +178,7 @@ def build() -> None:
         if start is not None:
             ref_paras = [
                 p for p in paras[start + 1:]
-                if p.style.name == "Reference" or p.text.startswith(("Lopez-Paz", "Vapnik"))
+                if p.style.name == "Reference" or p.text.startswith(("Huang PX", "Lopez-Paz", "Vapnik"))
             ]
             if ref_paras:
                 parent = ref_paras[0]._p.getparent()
@@ -189,12 +211,22 @@ def build() -> None:
             if not any(child.tag.endswith("cantSplit") for child in tr_pr):
                 tr_pr.append(OxmlElement("w:cantSplit"))
 
+    if len(d.tables) > 5:
+        table6 = d.tables[5]
+        for row in table6.rows:
+            tr_pr = row._tr.get_or_add_trPr()
+            if not any(child.tag.endswith("cantSplit") for child in tr_pr):
+                tr_pr.append(OxmlElement("w:cantSplit"))
+
     # Apply final pagination controls after all insertions have stabilized
     # paragraph indices.
     for p in d.paragraphs:
         if p.text.startswith("7 Reproducibility and data/code availability"):
             p.paragraph_format.page_break_before = None
             p.paragraph_format.keep_with_next = False
+        elif p.text.startswith("4.5 The robustness effect is not confined to one donor assignment"):
+            p.paragraph_format.page_break_before = True
+            p.paragraph_format.keep_with_next = True
         elif p.text.startswith("Table 9 Key reproducibility assets"):
             p.paragraph_format.page_break_before = None
 
