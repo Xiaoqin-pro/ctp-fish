@@ -93,12 +93,30 @@ def build():
         "Primary estimand: equal-weight mean of nine unrounded fold–seed cross-class macro-F1 differences.",
         "Primary interval: 5,000 paired species-stratified group-cluster bootstrap replicates, conditional on completed development, frozen models/seeds, and frozen seed-3407 donor realization.",
         "Donor-realization, F0-2RGB, donor-subject-suppressed, group-weighted, and MobileNet analyses: post-hoc or boundary evidence; not independent validation.",
-        "Route C: fixed mechanism stress control, not faithful CLIB reproduction and not an exhaustive contrastive-learning comparison.",
+        "Route C: fixed mechanism stress control, not faithful CLIB reproduction and not an exhaustive contrastive-learning comparison; detailed values are in Supplementary Note S6.",
         "Higher acquisition units (camera/session/deployment/date) were not verifiable from frozen recognition metadata.",
         "Official Fish4Knowledge TEST accessed: false.",
     ]
     for n in notes: doc.add_paragraph(n, style="List Bullet")
-    doc.add_heading("S6. Negative-result index", level=1)
+    doc.add_heading("S6. Route C mechanism stress control", level=1)
+    doc.add_paragraph("Supplementary Note S6. Route C is a separately frozen two-stage mask-guided subject–non-primary contrastive mechanism control. It completed 9/9 fold–seed cells with official-test access false in every metrics file. Its equal-weight means were 0.6984 original-view macro-F1, 0.6981 foreground macro-F1, 0.7014 same-class-composite macro-F1, 0.4224 cross-class-composite macro-F1, and 0.1610 DAR-flip. Route C is retained as a fixed stress control and is not interpreted as a faithful CLIB reproduction or an exhaustive contrastive-learning comparison.")
+
+    doc.add_heading("S7. Donor residual-bin heterogeneity", level=1)
+    residual = pd.read_csv(ROOT / "experiments" / "cxt_fish_effect_vs_donor_residual.csv")
+    rrows = []
+    for _, x in residual[residual.n_cell_observations > 0].iterrows():
+        rrows.append([x["bin"], int(x["n_cell_observations"]), int(x["n_unique_recipients"]), f"{x['f0_correctness']:.3f}", f"{x['cxt_correctness']:.3f}", f"{x['paired_correctness_delta']*100:+.2f} pp", f"{x['dar_flip_f0']:.3f}", f"{x['dar_flip_cxt']:.3f}"])
+    add_table(doc, ["Residual bin", "Pairs", "Recipients", "F0 correctness", "CXT-Fish correctness", "Delta (pp)", "F0 DAR-flip", "CXT DAR-flip"], rrows, [1.1, 0.8, 0.9, 1.1, 1.3, 0.9, 0.9, 1.0], size=7)
+    doc.add_paragraph("Table S7. Frozen donor-subject residual-bin sensitivity. Bins are defined by donor foreground fraction outside the recipient hard mask; empty bins are not shown. Values are descriptive and do not define a new inferential endpoint.")
+
+    doc.add_heading("S8. Donor-species equal-weight sensitivity", level=1)
+    s8rows = []
+    for _, x in d.iterrows():
+        s8rows.append([x["donor_species"], int(x["n_recipients"]), int(x["unique_donor_groups"]), f"{x['f0_correct']:.3f}", f"{x['cxt_correct']:.3f}", f"{x['effect']*100:+.2f} pp"])
+    add_table(doc, ["Donor species", "Recipients", "Donor groups", "F0 correctness", "CXT-Fish correctness", "Delta (pp)"], s8rows, [1.1, 1.0, 1.0, 1.1, 1.3, 0.9], size=7)
+    doc.add_paragraph("Table S8. Donor-species equal-weight correctness sensitivity. Species are weighted equally for this descriptive audit; the natural-manifest-weighted main result remains primary.")
+
+    doc.add_heading("S9. Negative-result index", level=1)
     doc.add_paragraph("The public repository retains the stopped TCCR, DTH, donor-aware, TRAFS, CIR, DLE, TAP, and CXT-Select explorations. They are not presented as successful methods and are included only to document the pre-specified stopping logic and the boundary of the final foreground-sufficiency claim.")
 
     doc.save(OUT)

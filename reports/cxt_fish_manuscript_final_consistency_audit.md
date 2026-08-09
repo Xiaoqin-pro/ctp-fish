@@ -32,6 +32,7 @@ Audit target: `paper/CXT-Fish_IMTS_Final_ConstructValidity_Manuscript_revised.do
 - Main result is explicitly described as a same-corpus frozen group-disjoint re-evaluation.
 - Development and outer folds are stated to come from the same Fish4Knowledge-derived corpus.
 - Main interval is explicitly conditional and paired; post-hoc intervals are labelled exploratory.
+- The final synthesis calls this a focal robustness contrast, not a manuscript-level primary robustness estimand.
 - Donor-realization, F0-2RGB, donor-subject-suppressed, group-weighted, MobileNet, and Route C analyses are not presented as independent validation.
 - Macro-F1 weighting and group-weighted sensitivity are distinguished.
 - Training masks are identified as privileged annotations with preparation cost.
@@ -49,8 +50,9 @@ The revised DOCX was scanned for misleading `post-development` or `confirmation`
 - No generated fish imagery is used.
 - Figure source is `scripts/plot_cxt_fish_manuscript_figures.py`.
 - Quantitative figure panels use frozen artifacts only.
+- Fig. 1, Fig. 4, and Fig. 5 use white-background, thin-rule, low-saturation vector schematics with standard subpanel/stage labels; all figures have PNG/PDF/SVG exports.
+- Supplementary Note S6 and Tables S7–S8 exist and match the manuscript's Route C, residual-bin, and donor-species references.
 
 ## Final reviewer judgement
 
 The manuscript is internally consistent with the frozen evidence boundary. It supports a narrow construct-validity and targeted robustness claim, not external-dataset generalization, backbone-agnostic behavior, universal clean-accuracy improvement, causal background isolation, or superiority over CLIB.
-
