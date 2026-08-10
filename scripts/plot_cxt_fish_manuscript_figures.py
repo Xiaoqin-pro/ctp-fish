@@ -1,9 +1,9 @@
-"""Generate the CXT-Fish manuscript figure system.
+"""Build the journal figure set for the CXT-Fish manuscript.
 
-The figures are rebuilt from the frozen CSV artifacts and vector primitives.
-No scientific image is generated or redistributed.  The visual system is
-deliberately restrained: compact panels, direct labels, white background,
-colour-blind-safe accents, and editable PDF/SVG text.
+The visual grammar follows conventional scientific figures: white canvas,
+thin rules, compact panels, direct annotation, data-first comparisons, and
+vector output.  All numerical panels are rebuilt from frozen CSV/JSON
+artifacts.  Scientific images are neither generated nor redistributed.
 """
 from __future__ import annotations
 
@@ -13,386 +13,543 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from matplotlib.patches import FancyArrowPatch, Polygon, Rectangle, Ellipse
+from matplotlib.patches import Circle, Ellipse, FancyArrowPatch, Polygon, Rectangle
 
 ROOT = Path(__file__).resolve().parents[1]
 EXP = ROOT / "experiments"
-OUT = ROOT / "reports" / "figures" / "manuscript_submission_v3"
+OUT = ROOT / "reports" / "figures" / "manuscript_submission_v4"
 OUT.mkdir(parents=True, exist_ok=True)
 
-INK = "#1d2a35"
-MUTED = "#687582"
-GRID = "#dce3e8"
-NAVY = "#315f8a"
-TEAL = "#168b83"
-AMBER = "#c88935"
-BURGUNDY = "#ae5a5d"
-PURPLE = "#756fa3"
-PALE_BLUE = "#eaf1f6"
-PALE_TEAL = "#e7f3f1"
-PALE_AMBER = "#fbf3e6"
+# Restrained, colour-blind-safe palette. Black/grey carry structure; colour is
+# reserved for the compared methods and the focal robustness effect.
+BLACK = "#17212b"
+GREY = "#66717c"
+LIGHT = "#d8dee3"
+LIGHTER = "#eef1f3"
+BLUE = "#27628d"
+TEAL = "#148f84"
+ORANGE = "#d07a24"
+RED = "#b44b51"
+PURPLE = "#7561a8"
 
 plt.rcParams.update({
     "font.family": "sans-serif",
     "font.sans-serif": ["Arial", "Helvetica", "DejaVu Sans"],
-    "font.size": 8.5,
-    "axes.titlesize": 9.5,
-    "axes.labelsize": 8.5,
-    "axes.linewidth": 0.8,
-    "axes.edgecolor": "#82909b",
-    "axes.labelcolor": INK,
-    "xtick.color": INK,
-    "ytick.color": INK,
-    "axes.spines.top": False,
-    "axes.spines.right": False,
-    "axes.grid": True,
-    "axes.axisbelow": True,
-    "grid.color": GRID,
-    "grid.linewidth": 0.55,
-    "grid.alpha": 0.8,
-    "figure.dpi": 160,
+    "font.size": 8.0,
+    "axes.titlesize": 8.8,
+    "axes.labelsize": 8.0,
+    "axes.linewidth": 0.65,
+    "axes.edgecolor": GREY,
+    "axes.labelcolor": BLACK,
+    "xtick.color": BLACK,
+    "ytick.color": BLACK,
+    "xtick.labelsize": 7.3,
+    "ytick.labelsize": 7.3,
+    "figure.dpi": 180,
     "savefig.dpi": 600,
-    "svg.fonttype": "none",
     "pdf.fonttype": 42,
+    "svg.fonttype": "none",
 })
 
 
-def save(fig: plt.Figure, name: str) -> None:
-    stem = Path(name).stem
-    fig.savefig(OUT / f"{stem}.png", bbox_inches="tight", pad_inches=0.04,
-                facecolor="white")
-    fig.savefig(OUT / f"{stem}.pdf", bbox_inches="tight", pad_inches=0.04,
-                facecolor="white")
-    fig.savefig(OUT / f"{stem}.svg", bbox_inches="tight", pad_inches=0.04,
-                facecolor="white")
+def save(fig: plt.Figure, stem: str) -> None:
+    for suffix in ("png", "pdf", "svg"):
+        fig.savefig(
+            OUT / f"{stem}.{suffix}",
+            bbox_inches="tight",
+            pad_inches=0.035,
+            facecolor="white",
+        )
     plt.close(fig)
 
 
-def panel(ax, label: str) -> None:
-    ax.text(-0.12, 1.06, label, transform=ax.transAxes, ha="left", va="bottom",
-            fontsize=10, weight="bold", color=INK)
+def label_panel(ax, text: str) -> None:
+    ax.text(-0.10, 1.05, text, transform=ax.transAxes, fontsize=9.5,
+            fontweight="bold", va="bottom", ha="left", color=BLACK)
 
 
-def clean_axis(ax, grid=True) -> None:
+def style_axis(ax, *, xgrid=False, ygrid=False) -> None:
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
-    ax.spines["left"].set_color("#82909b")
-    ax.spines["bottom"].set_color("#82909b")
-    ax.grid(grid, axis="y" if grid else "both")
-    ax.tick_params(length=3, width=0.7, labelsize=8)
+    ax.spines["left"].set_linewidth(0.65)
+    ax.spines["bottom"].set_linewidth(0.65)
+    ax.tick_params(length=2.8, width=0.65)
+    if xgrid:
+        ax.grid(axis="x", color=LIGHT, linewidth=0.5, alpha=0.8)
+    if ygrid:
+        ax.grid(axis="y", color=LIGHT, linewidth=0.5, alpha=0.8)
+    ax.set_axisbelow(True)
 
 
-def box(ax, xy, width, height, text, edge=NAVY, fill="white", fs=8.0,
-        lw=1.0, text_color=INK):
-    x, y = xy
-    p = Rectangle((x, y), width, height, linewidth=lw, edgecolor=edge,
-                  facecolor=fill, joinstyle="round")
-    ax.add_patch(p)
-    ax.text(x + width / 2, y + height / 2, text, ha="center", va="center",
-            fontsize=fs, color=text_color, linespacing=1.2)
-    return p
+def arrow(ax, a, b, *, color=GREY, lw=0.9, ls="-") -> None:
+    ax.add_patch(FancyArrowPatch(a, b, arrowstyle="-|>", mutation_scale=8,
+                                 color=color, linewidth=lw, linestyle=ls,
+                                 shrinkA=1.5, shrinkB=1.5))
 
 
-def arrow(ax, start, end, color=MUTED, lw=1.0, style="-"):
-    ax.add_patch(FancyArrowPatch(start, end, arrowstyle="-|>", mutation_scale=9,
-                                 linewidth=lw, linestyle=style, color=color,
-                                 shrinkA=2, shrinkB=2))
+def _cell(ax, x, y, w, h, title, detail, *, color=BLUE, number=None) -> None:
+    ax.add_patch(Rectangle((x, y), w, h, facecolor="white", edgecolor=BLACK,
+                           linewidth=0.75))
+    ax.add_patch(Rectangle((x, y + h - 0.035), w, 0.035, facecolor=color,
+                           edgecolor=color, linewidth=0))
+    if number is not None:
+        ax.text(x + 0.025, y + h - 0.075, str(number), fontsize=7.2,
+                fontweight="bold", color=color, ha="left", va="top")
+    ax.text(x + 0.025, y + 0.56 * h, title, fontsize=7.5, fontweight="bold",
+            color=BLACK, ha="left", va="center")
+    ax.text(x + 0.025, y + 0.23 * h, detail, fontsize=6.7, color=GREY,
+            ha="left", va="center", linespacing=1.2)
 
 
 def fig1_protocol() -> None:
-    fig = plt.figure(figsize=(10.5, 3.5))
-    gs = fig.add_gridspec(2, 1, height_ratios=[1.2, 0.72], hspace=0.23)
-    ax = fig.add_subplot(gs[0]); ax.set_xlim(0, 1); ax.set_ylim(0, 1); ax.axis("off")
-    panel(ax, "a")
-    ax.text(0, 1.0, "Evidence chain", transform=ax.transAxes, fontsize=10,
-            weight="bold", color=INK, va="bottom")
-    labels = ["F4K-16T\nconstruction", "Group-aware\nsplit", "Context\ninterventions", "Foreground\nsufficiency", "Frozen\nre-evaluation"]
-    fills = [PALE_BLUE, PALE_BLUE, PALE_TEAL, PALE_TEAL, PALE_BLUE]
-    edges = [NAVY, NAVY, TEAL, TEAL, NAVY]
-    xs = np.linspace(0.02, 0.80, 5)
-    for i, (x, lab) in enumerate(zip(xs, labels), 1):
-        ax.add_patch(Rectangle((x, 0.30), 0.145, 0.36, facecolor=fills[i-1],
-                               edgecolor=edges[i-1], linewidth=1.1))
-        ax.add_patch(Ellipse((x + 0.018, 0.70), 0.034, 0.034,
-                             facecolor=edges[i-1], edgecolor="white", linewidth=0.6))
-        ax.text(x + 0.018, 0.70, str(i), ha="center", va="center", color="white",
-                fontsize=7, weight="bold")
-        ax.text(x + 0.0725, 0.48, lab, ha="center", va="center", fontsize=8.0,
-                color=INK, linespacing=1.2)
-        if i < 5:
-            arrow(ax, (x + 0.145, 0.48), (xs[i] - 0.012, 0.48), color="#7c8993")
-    ax.text(0.98, 0.10, "same corpus", ha="right", va="center", fontsize=8,
-            color=MUTED)
-    ax.plot([0.02, 0.98], [0.10, 0.10], color=GRID, linewidth=0.8)
+    """Evidence architecture: main chain above, bounded controls below."""
+    fig = plt.figure(figsize=(10.7, 3.35))
+    gs = fig.add_gridspec(2, 1, height_ratios=[1.35, 0.85], hspace=0.12)
 
-    ax2 = fig.add_subplot(gs[1]); ax2.set_xlim(0, 1); ax2.set_ylim(0, 1); ax2.axis("off")
-    panel(ax2, "b")
-    ax2.text(0, 1.0, "Bounded post-hoc controls", transform=ax2.transAxes,
-             fontsize=10, weight="bold", color=INK, va="bottom")
-    controls = [("donor realization", "5 deterministic seeds", AMBER),
-                ("two-RGB control", "duplicated supervised views", NAVY),
-                ("construct validity", "subject-suppressed sensitivity", TEAL)]
-    for i, (head, sub, col) in enumerate(controls):
-        x = 0.02 + i * 0.325
-        ax2.add_patch(Rectangle((x, 0.19), 0.27, 0.45, facecolor="white",
-                                edgecolor=col, linewidth=1.0))
-        ax2.add_patch(Rectangle((x, 0.19), 0.012, 0.45, facecolor=col,
-                                edgecolor=col, linewidth=0))
-        ax2.text(x + 0.03, 0.49, head, ha="left", va="center", fontsize=8.5,
-                 weight="bold", color=INK)
-        ax2.text(x + 0.03, 0.31, sub, ha="left", va="center", fontsize=7.6,
-                 color=MUTED)
-    ax2.text(0.98, 0.05, "post-hoc; not independent validation", ha="right",
-             va="center", fontsize=7.6, color=MUTED, style="italic")
-    save(fig, "fig1_protocol.png")
+    ax = fig.add_subplot(gs[0])
+    ax.set_xlim(0, 1); ax.set_ylim(0, 1); ax.axis("off")
+    label_panel(ax, "a")
+    ax.text(0, 1.03, "Study evidence architecture", transform=ax.transAxes,
+            fontsize=9.2, fontweight="bold", color=BLACK, ha="left")
+    xs = [0.02, 0.215, 0.410, 0.605, 0.800]
+    titles = ["F4K-16T", "Correlation audit", "Intervention family",
+              "Training\nintervention", "Frozen\nre-evaluation"]
+    details = ["16 species\n8,680 recorded groups",
+               "image-level vs\ngroup-disjoint",
+               "foreground and\ndonor composites",
+               "label-level\nforeground view",
+               "3 folds x 3 seeds\nsame corpus"]
+    colors = [BLUE, BLUE, ORANGE, TEAL, BLUE]
+    for i, (x, t, d, c) in enumerate(zip(xs, titles, details, colors), start=1):
+        _cell(ax, x, 0.30, 0.155, 0.43, t, d, color=c, number=i)
+        if i < 5:
+            arrow(ax, (x + 0.155, 0.515), (xs[i] - 0.010, 0.515), color=GREY)
+    ax.plot([0.02, 0.955], [0.17, 0.17], color=BLACK, linewidth=0.65)
+    ax.text(0.02, 0.10, "Historical development", fontsize=6.8, color=GREY,
+            ha="left", va="center")
+    ax.text(0.955, 0.10, "frozen models and protocol", fontsize=6.8,
+            color=GREY, ha="right", va="center")
+
+    ax = fig.add_subplot(gs[1])
+    ax.set_xlim(0, 1); ax.set_ylim(0, 1); ax.axis("off")
+    label_panel(ax, "b")
+    ax.text(0, 1.03, "Bounded post-hoc construct checks", transform=ax.transAxes,
+            fontsize=9.2, fontweight="bold", color=BLACK, ha="left")
+    controls = [
+        (0.02, "Donor realization", "five deterministic assignments", ORANGE),
+        (0.355, "Ordinary-RGB control", "matched views, CE count and 2B forward", BLUE),
+        (0.690, "Subject-suppressed donor", "alternative-explanation sensitivity", TEAL),
+    ]
+    for x, head, sub, col in controls:
+        ax.plot([x, x], [0.24, 0.68], color=col, linewidth=3.0)
+        ax.text(x + 0.025, 0.56, head, fontsize=7.9, fontweight="bold",
+                color=BLACK, ha="left", va="center")
+        ax.text(x + 0.025, 0.33, sub, fontsize=6.7, color=GREY,
+                ha="left", va="center")
+    ax.text(0.98, 0.07, "post-hoc; internal to the same corpus",
+            fontsize=6.8, color=GREY, style="italic", ha="right")
+    save(fig, "fig1_protocol")
 
 
 def fig2_gate0() -> None:
-    d = pd.read_csv(EXP / "ctp_fish_gate0_summary.csv")
-    means = d.groupby("split").mean(numeric_only=True)
-    pc = pd.read_csv(EXP / "ctp_fish_gate0_per_class_summary.csv")
-    tier_means = pc.groupby(["split", "tier"])["f1"].mean().unstack("split")
-    fig, axs = plt.subplots(1, 3, figsize=(10.5, 3.1), gridspec_kw={"wspace": 0.36})
-    # a: paired protocol estimate
-    ax = axs[0]; panel(ax, "a")
-    vals = {"macro-F1": [means.loc["image", "macro_f1"], means.loc["track", "macro_f1"]],
-            "group-balanced accuracy": [means.loc["image", "track_balanced_accuracy"], means.loc["track", "track_balanced_accuracy"]]}
-    for name, ys, col in [("macro-F1", vals["macro-F1"], NAVY),
-                          ("group-balanced accuracy", vals["group-balanced accuracy"], AMBER)]:
-        ax.plot([0, 1], ys, color=col, linewidth=2.0, marker="o", markersize=5,
-                label=name)
-    ax.set_xticks([0, 1], ["image-level", "group-disjoint"])
-    ax.set_ylim(0.90, 1.005); ax.set_ylabel("score"); clean_axis(ax)
-    ax.legend(frameon=False, fontsize=7.3, loc="lower left")
-    # b: class strata
-    ax = axs[1]; panel(ax, "b")
-    for tier, col in [("head", NAVY), ("mid", TEAL), ("tail", AMBER)]:
-        y = [tier_means.loc[tier, "image"], tier_means.loc[tier, "track"]]
-        ax.plot([0, 1], y, marker="o", linewidth=1.8, markersize=5, label=tier, color=col)
-    ax.set_xticks([0, 1], ["image-level", "group-disjoint"])
-    ax.set_ylim(0.88, 1.005); ax.set_ylabel("per-class F1"); clean_axis(ax)
-    ax.legend(frameon=False, fontsize=7.3, loc="lower left")
-    # c: nearest-neighbour audit
-    ax = axs[2]; panel(ax, "c")
-    ax.barh([1, 0], [0.4821, 0.0], color=[NAVY, AMBER], height=0.42)
-    ax.set_yticks([1, 0], ["image-level", "group-disjoint"])
-    ax.set_xlim(0, 0.55); ax.set_xlabel("same-group nearest-neighbour fraction")
-    clean_axis(ax, grid=False)
-    for y, v in [(1, 0.4821), (0, 0.0)]:
-        ax.text(v + 0.012, y, f"{v:.2f}", va="center", fontsize=8, color=INK)
-    save(fig, "fig2_gate0.png")
+    """Correlation audit with protocol, class-tier and neighbour evidence."""
+    runs = pd.read_csv(EXP / "ctp_fish_gate0_summary.csv")
+    per_class = pd.read_csv(EXP / "ctp_fish_gate0_per_class_summary.csv")
+    m = runs.groupby("split").mean(numeric_only=True)
+    tiers = per_class.groupby(["split", "tier"])["f1"].mean().unstack("split")
+    fig, axs = plt.subplots(1, 3, figsize=(10.7, 3.05),
+                            gridspec_kw={"wspace": 0.42})
+
+    ax = axs[0]; label_panel(ax, "a")
+    metrics = [("Macro-F1", "macro_f1", BLUE),
+               ("Group-balanced\naccuracy", "track_balanced_accuracy", ORANGE)]
+    for i, (lab, col, color) in enumerate(metrics):
+        y0, y1 = m.loc["image", col], m.loc["track", col]
+        ax.plot([0, 1], [y0, y1], color=color, marker="o", markersize=4.5,
+                linewidth=1.5)
+        ax.text(1.04, y1, lab, fontsize=6.7, color=color, va="center")
+    ax.set_xticks([0, 1], ["Image split", "Group-disjoint"])
+    ax.set_ylim(0.94, 1.002); ax.set_ylabel("Score")
+    ax.set_title("Evaluation unit", loc="left", fontweight="bold")
+    style_axis(ax, ygrid=True)
+
+    ax = axs[1]; label_panel(ax, "b")
+    for tier, color in [("head", BLUE), ("mid", TEAL), ("tail", ORANGE)]:
+        y0, y1 = tiers.loc[tier, "image"], tiers.loc[tier, "track"]
+        ax.plot([0, 1], [y0, y1], color=color, marker="o", markersize=4.5,
+                linewidth=1.5, label=tier.capitalize())
+    ax.set_xticks([0, 1], ["Image split", "Group-disjoint"])
+    ax.set_ylim(0.90, 1.002); ax.set_ylabel("Mean per-class F1")
+    ax.set_title("Class-frequency tiers", loc="left", fontweight="bold")
+    ax.legend(frameon=False, fontsize=6.6, loc="lower left", handlelength=1.4)
+    style_axis(ax, ygrid=True)
+
+    ax = axs[2]; label_panel(ax, "c")
+    vals = [48.21, 0.0]
+    yy = [1, 0]
+    ax.barh(yy, vals, color=[BLUE, LIGHT], height=0.34, edgecolor="none")
+    ax.set_yticks(yy, ["Image split", "Group-disjoint"])
+    ax.set_xlim(0, 52); ax.set_xlabel("Same-group nearest neighbour (%)")
+    ax.set_title("Feature-neighbour audit", loc="left", fontweight="bold")
+    for y, v in zip(yy, vals):
+        ax.text(max(v + 1.2, 1.2), y, f"{v:.2f}", va="center", fontsize=7.1,
+                color=BLACK)
+    style_axis(ax, xgrid=True)
+    save(fig, "fig2_gate0")
 
 
 def fig3_context() -> None:
-    labels = ["Original RGB", "Foreground-only", "Constant-fill", "Shuffled-mask",
-              "Inpainted", "Background-only", "Mask-only", "Geometry-only"]
-    vals = [0.937, 0.938, 0.895, 0.897, 0.805, 0.799, 0.713, 0.077]
-    colors = [NAVY, TEAL, "#93a95d", "#93a95d", AMBER, AMBER, PURPLE, MUTED]
-    order = np.argsort(vals)
-    fig, ax = plt.subplots(figsize=(8.6, 3.7))
-    panel(ax, "a")
-    y = np.arange(len(labels))
+    """Data-first diagnostic spectrum; no decorative cards or icons."""
+    labels = ["Original RGB", "Foreground-suppressed detail", "Constant fill",
+              "Shuffled mask", "Telea inpaint", "Non-primary region",
+              "Mask only", "Bounding-box geometry"]
+    values = np.array([0.937, 0.938, 0.895, 0.897, 0.805, 0.799, 0.713, 0.077])
+    families = ["reference", "subject-preserving", "subject-preserving",
+                "subject-preserving", "subject-suppressed", "subject-suppressed",
+                "geometry", "geometry"]
+    colors = {"reference": BLACK, "subject-preserving": TEAL,
+              "subject-suppressed": ORANGE, "geometry": PURPLE}
+    order = np.argsort(values)
+    fig, ax = plt.subplots(figsize=(8.9, 3.85))
+    fig.subplots_adjust(top=0.82)
+    label_panel(ax, "a")
+    y = np.arange(len(order))
     for yi, idx in enumerate(order):
-        ax.hlines(yi, 0, vals[idx], color=GRID, linewidth=3.5, zorder=1)
-        ax.plot(vals[idx], yi, "o", color=colors[idx], markersize=7, zorder=3)
-        ax.text(vals[idx] + 0.015, yi, f"{vals[idx]:.3f}", va="center", fontsize=8,
-                color=INK)
+        ax.plot([0, values[idx]], [yi, yi], color=LIGHT, linewidth=1.0)
+        ax.scatter(values[idx], yi, s=31, color=colors[families[idx]], zorder=3,
+                   edgecolor="white", linewidth=0.5)
+        ax.text(values[idx] + 0.013, yi, f"{values[idx]:.3f}", va="center",
+                fontsize=7.2, color=BLACK)
+    ax.axvline(1 / 16, color=GREY, linestyle=(0, (3, 2)), linewidth=0.75)
+    ax.text(1 / 16, len(y) - 0.15, "chance", fontsize=6.5, color=GREY,
+            ha="left", va="bottom")
     ax.set_yticks(y, [labels[i] for i in order])
-    ax.set_xlim(0, 1.05); ax.set_xlabel("historical development macro-F1")
-    ax.set_title("Context-diagnostic views", loc="left", fontsize=10, weight="bold", color=INK)
-    ax.axvline(0.06, color=MUTED, linestyle=(0, (3, 2)), linewidth=0.9)
-    ax.text(0.06, 1.01, "chance reference", transform=ax.get_xaxis_transform(),
-            ha="left", va="bottom", fontsize=7.4, color=MUTED)
-    clean_axis(ax)
-    save(fig, "fig3_context.png")
+    ax.set_xlim(0, 1.02); ax.set_xlabel("Historical development macro-F1")
+    ax.set_title("Predictive evidence retained by diagnostic views", loc="left",
+                 fontweight="bold", y=1.12)
+    handles = [plt.Line2D([0], [0], marker="o", color="none", markerfacecolor=c,
+                          markeredgecolor="none", markersize=5, label=k)
+               for k, c in colors.items()]
+    ax.legend(handles=handles, frameon=False, ncol=4, fontsize=6.3,
+              loc="lower right", bbox_to_anchor=(1.0, 1.025), handletextpad=0.35,
+              columnspacing=0.9)
+    style_axis(ax, xgrid=True)
+    save(fig, "fig3_context")
 
 
-def _fish(ax, cx=0.50, cy=0.50, scale=1.0, fill="#7896a6", edge="#415563"):
-    ax.add_patch(Ellipse((cx, cy), 0.46 * scale, 0.16 * scale, angle=-8,
-                         facecolor=fill, edgecolor=edge, linewidth=0.9))
-    ax.add_patch(Polygon([[cx - 0.21 * scale, cy + 0.01 * scale],
-                          [cx - 0.31 * scale, cy - 0.07 * scale],
-                          [cx - 0.27 * scale, cy + 0.10 * scale]],
-                         facecolor=fill, edgecolor=edge, linewidth=0.8))
-    ax.plot(cx + 0.18 * scale, cy + 0.02 * scale, "o", color=INK, ms=2.0)
+def _fish(ax, cx, cy, sx, sy, *, face, edge=BLACK, alpha=1.0) -> None:
+    ax.add_patch(Ellipse((cx, cy), sx, sy, angle=-6, facecolor=face,
+                         edgecolor=edge, linewidth=0.7, alpha=alpha))
+    ax.add_patch(Polygon([[cx - sx * 0.43, cy], [cx - sx * 0.66, cy - sy * 0.48],
+                          [cx - sx * 0.60, cy + sy * 0.55]], closed=True,
+                         facecolor=face, edgecolor=edge, linewidth=0.7, alpha=alpha))
+    ax.add_patch(Circle((cx + sx * 0.31, cy + sy * 0.06), sy * 0.045,
+                        facecolor=BLACK, edgecolor="none"))
 
 
 def fig4_donor() -> None:
-    fig, axs = plt.subplots(1, 4, figsize=(10.5, 2.8), gridspec_kw={"wspace": 0.20})
-    titles = ["recipient RGB", "recipient mask", "donor context", "composite"]
-    for ax, title in zip(axs, titles):
+    """Technical compositing diagram with explicit operator and region legend."""
+    fig = plt.figure(figsize=(10.7, 3.2))
+    gs = fig.add_gridspec(1, 5, width_ratios=[1, 0.82, 1, 0.12, 1.15], wspace=0.22)
+    axes = [fig.add_subplot(gs[0, i]) for i in [0, 1, 2, 4]]
+    titles = ["Recipient image  $x_r$", "Mask  $m_r$", "Donor image  $x_d$",
+              r"Composite  $x_{r\leftarrow d}$"]
+    for i, (ax, title) in enumerate(zip(axes, titles)):
         ax.set_xlim(0, 1); ax.set_ylim(0, 1); ax.axis("off")
-        ax.text(0.02, 0.98, title, transform=ax.transAxes, ha="left", va="top",
-                fontsize=8.5, weight="bold", color=INK)
-        ax.add_patch(Rectangle((0.08, 0.19), 0.84, 0.60, facecolor="white",
-                               edgecolor="#9aa6b2", linewidth=0.8))
-    for y, c in [(0.31, "#d7e6eb"), (0.45, "#b9d5dc"), (0.60, "#d7e6eb")]:
-        axs[0].plot([0.10, 0.90], [y, y], color=c, linewidth=5, solid_capstyle="butt")
-    _fish(axs[0])
-    _fish(axs[1], fill=TEAL, edge="#206b60")
-    axs[1].text(0.50, 0.08, r"$m_r$", ha="center", fontsize=9, color="#206b60")
-    for y, c in [(0.31, "#e6d9c9"), (0.45, "#d8c7af"), (0.60, "#eadfd1")]:
-        axs[2].plot([0.10, 0.90], [y, y], color=c, linewidth=5, solid_capstyle="butt")
-    axs[2].text(0.50, 0.08, "different species / group", ha="center", fontsize=6.8,
-                color=MUTED)
-    for y, c in [(0.31, "#d8c4af"), (0.45, "#c9b08f"), (0.60, "#e1d1bd")]:
-        axs[3].plot([0.10, 0.90], [y, y], color=c, linewidth=5, solid_capstyle="butt")
-    _fish(axs[3])
-    for ax in axs[:-1]: arrow(ax, (0.93, 0.49), (1.04, 0.49), color="#7c8993")
-    fig.text(0.50, 0.035, r"$x_{r\leftarrow d}=m_r\odot x_r+(1-m_r)\odot R(x_d)$",
-             ha="center", fontsize=8.5, color=INK)
-    fig.text(0.50, 0.005, "vector schematic; context intervention is synthetic and mask-defined",
-             ha="center", fontsize=7.2, color=MUTED)
-    save(fig, "fig4_donor_intervention.png")
+        ax.text(0, 1.03, f"{chr(97+i)}  {title}", fontsize=8.1,
+                fontweight="bold", color=BLACK, ha="left")
+        ax.add_patch(Rectangle((0.03, 0.20), 0.94, 0.62, facecolor="#f6f8f9",
+                               edgecolor=BLACK, linewidth=0.7))
+    # Recipient scene and subject.
+    for yy in [0.30, 0.43, 0.56, 0.69]:
+        axes[0].plot([0.04, 0.96], [yy, yy + 0.03], color="#b7d1d8", lw=7,
+                     solid_capstyle="butt")
+    _fish(axes[0], 0.53, 0.50, 0.48, 0.18, face=BLUE)
+    # Mask is shown as a binary operator with a narrow feather band.
+    axes[1].add_patch(Rectangle((0.03, 0.20), 0.94, 0.62, facecolor="#20282f",
+                                edgecolor=BLACK, linewidth=0.7))
+    _fish(axes[1], 0.53, 0.50, 0.48, 0.18, face="white", edge="white")
+    axes[1].add_patch(Ellipse((0.53, 0.50), 0.52, 0.22, angle=-6,
+                              facecolor="none", edgecolor=ORANGE,
+                              linewidth=1.0, linestyle=(0, (2, 1.5))))
+    # Donor source.
+    for yy in [0.30, 0.43, 0.56, 0.69]:
+        axes[2].plot([0.04, 0.96], [yy + 0.02, yy - 0.02], color="#ddc6a9", lw=7,
+                     solid_capstyle="butt")
+    _fish(axes[2], 0.35, 0.56, 0.34, 0.13, face=ORANGE, alpha=0.70)
+    axes[2].text(0.50, 0.10, "different species and recorded group",
+                 fontsize=6.5, color=GREY, ha="center")
+    # Composite retains recipient subject and replaces complement.
+    for yy in [0.30, 0.43, 0.56, 0.69]:
+        axes[3].plot([0.04, 0.96], [yy + 0.02, yy - 0.02], color="#ddc6a9", lw=7,
+                     solid_capstyle="butt")
+    _fish(axes[3], 0.53, 0.50, 0.48, 0.18, face=BLUE)
+    axes[3].add_patch(Ellipse((0.53, 0.50), 0.52, 0.22, angle=-6,
+                              facecolor="none", edgecolor=ORANGE,
+                              linewidth=1.0, linestyle=(0, (2, 1.5))))
+    # Operator between input triplet and output.
+    op = fig.add_subplot(gs[0, 3]); op.set_xlim(0, 1); op.set_ylim(0, 1); op.axis("off")
+    arrow(op, (0.05, 0.51), (0.95, 0.51), color=BLACK, lw=1.0)
+    fig.text(0.50, 0.105,
+             r"$x_{r\leftarrow d}=m_r\odot x_r+(1-m_r)\odot R(x_d)$",
+             ha="center", va="center", fontsize=8.5, color=BLACK)
+    fig.text(0.50, 0.035,
+             "blue: recipient subject     tan: donor non-recipient region     orange dashed: feathered boundary",
+             ha="center", va="center", fontsize=6.5, color=GREY)
+    save(fig, "fig4_donor_intervention")
 
 
 def fig5_method() -> None:
-    fig, axs = plt.subplots(1, 2, figsize=(10.5, 3.1), gridspec_kw={"wspace": 0.28})
-    # training panel
-    ax = axs[0]; ax.set_xlim(0, 1); ax.set_ylim(0, 1); ax.axis("off"); panel(ax, "a")
-    ax.text(0, 1.0, "training-time objective", transform=ax.transAxes,
-            fontsize=10, weight="bold", color=INK, va="bottom")
-    box(ax, (0.02, 0.60), 0.20, 0.16, "ordinary RGB\n$x$", NAVY, PALE_BLUE)
-    box(ax, (0.02, 0.28), 0.20, 0.16, "foreground-sufficient\n$x_{fg}$", TEAL, PALE_TEAL)
-    box(ax, (0.36, 0.42), 0.25, 0.28, "shared\nResNet18", NAVY, "white", fs=9)
-    box(ax, (0.76, 0.60), 0.20, 0.16, r"$CE(f(x),y)$", NAVY, PALE_BLUE, fs=9)
-    box(ax, (0.76, 0.28), 0.20, 0.16, r"$\lambda CE(f(x_{fg}),y)$", TEAL, PALE_TEAL, fs=8.1)
-    arrow(ax, (0.22, 0.68), (0.36, 0.60), NAVY); arrow(ax, (0.22, 0.36), (0.36, 0.52), TEAL)
-    arrow(ax, (0.61, 0.60), (0.76, 0.68), NAVY); arrow(ax, (0.61, 0.52), (0.76, 0.36), TEAL)
-    ax.text(0.50, 0.12, r"$L=CE(f(x),y)+\lambda CE(f(x_{fg}),y)$;  $\lambda=1$",
-            ha="center", fontsize=8.3, color=INK)
-    ax.text(0.50, 0.02, "two supervised views, one concatenated forward", ha="center",
-            fontsize=7.6, color=MUTED)
-    # inference panel
-    ax = axs[1]; ax.set_xlim(0, 1); ax.set_ylim(0, 1); ax.axis("off"); panel(ax, "b")
-    ax.text(0, 1.0, "inference-time graph", transform=ax.transAxes,
-            fontsize=10, weight="bold", color=INK, va="bottom")
-    box(ax, (0.08, 0.48), 0.22, 0.18, "ordinary RGB\n$x$", NAVY, PALE_BLUE, fs=9)
-    box(ax, (0.40, 0.48), 0.28, 0.18, "ResNet18\nclassifier", NAVY, "white", fs=9)
-    box(ax, (0.80, 0.48), 0.14, 0.18, r"$\hat y$", TEAL, PALE_TEAL, fs=10)
-    arrow(ax, (0.30, 0.57), (0.40, 0.57), NAVY); arrow(ax, (0.68, 0.57), (0.80, 0.57), TEAL)
-    ax.text(0.51, 0.28, "one image  ·  one forward pass", ha="center", fontsize=8.5, color=INK)
-    ax.text(0.51, 0.17, "no mask  ·  no donor selection  ·  no auxiliary branch", ha="center",
-            fontsize=7.5, color=MUTED)
-    save(fig, "fig5_method.png")
+    """Compact computation graph; no presentation-style card layout."""
+    fig, axs = plt.subplots(1, 2, figsize=(10.7, 3.15),
+                            gridspec_kw={"width_ratios": [1.25, 0.75], "wspace": 0.20})
+    ax = axs[0]; label_panel(ax, "a")
+    ax.set_xlim(0, 1); ax.set_ylim(0, 1); ax.axis("off")
+    ax.set_title("Training: two label-supervised views, shared parameters",
+                 loc="left", fontweight="bold", pad=8)
+    # Inputs and view construction.
+    ax.text(0.02, 0.76, "ordinary RGB", fontsize=7.2, color=BLACK)
+    ax.text(0.02, 0.31, "context-suppressed view", fontsize=7.2, color=BLACK)
+    ax.add_patch(Rectangle((0.02, 0.57), 0.18, 0.14, facecolor="#e9f0f5",
+                           edgecolor=BLUE, linewidth=0.8))
+    ax.text(0.11, 0.64, r"$x$", fontsize=11, ha="center", va="center")
+    ax.add_patch(Rectangle((0.02, 0.12), 0.18, 0.14, facecolor="#e8f3f1",
+                           edgecolor=TEAL, linewidth=0.8))
+    ax.text(0.11, 0.19, r"$x_{fg}$", fontsize=11, ha="center", va="center")
+    ax.text(0.27, 0.42, "concatenate\nalong batch axis", fontsize=6.8,
+            color=GREY, ha="center", va="center")
+    arrow(ax, (0.20, 0.64), (0.34, 0.49), color=BLUE)
+    arrow(ax, (0.20, 0.19), (0.34, 0.40), color=TEAL)
+    ax.add_patch(Rectangle((0.35, 0.30), 0.22, 0.30, facecolor="white",
+                           edgecolor=BLACK, linewidth=0.85))
+    ax.text(0.46, 0.49, "shared encoder", fontsize=7.8, fontweight="bold",
+            ha="center", va="center")
+    ax.text(0.46, 0.39, "+ classifier", fontsize=7.2, ha="center", va="center")
+    ax.text(0.46, 0.24, r"$2B$ inputs, one forward", fontsize=6.5,
+            color=GREY, ha="center")
+    arrow(ax, (0.57, 0.49), (0.68, 0.64), color=BLUE)
+    arrow(ax, (0.57, 0.40), (0.68, 0.19), color=TEAL)
+    ax.text(0.70, 0.64, r"$CE(f_\theta(x),y)$", fontsize=8.8, color=BLUE,
+            ha="left", va="center")
+    ax.text(0.70, 0.19, r"$\lambda CE(f_\theta(x_{fg}),y)$", fontsize=8.8,
+            color=TEAL, ha="left", va="center")
+    ax.plot([0.69, 0.96], [0.09, 0.09], color=BLACK, linewidth=0.65)
+    ax.text(0.825, 0.015,
+            r"$L=CE(f_\theta(x),y)+\lambda CE(f_\theta(x_{fg}),y),\ \lambda=1$",
+            fontsize=7.6, color=BLACK, ha="center", va="bottom")
+
+    ax = axs[1]; label_panel(ax, "b")
+    ax.set_xlim(0, 1); ax.set_ylim(0, 1); ax.axis("off")
+    ax.set_title("Inference: unchanged recognition graph", loc="left",
+                 fontweight="bold", pad=8)
+    xs = [0.05, 0.38, 0.78]
+    labels = [(r"RGB $x$", BLUE), ("encoder +\nclassifier", BLACK), (r"$\hat{y}$", TEAL)]
+    widths = [0.20, 0.27, 0.15]
+    for x, (lab, col), w in zip(xs, labels, widths):
+        ax.add_patch(Rectangle((x, 0.43), w, 0.20, facecolor="white",
+                               edgecolor=col, linewidth=0.85))
+        ax.text(x + w / 2, 0.53, lab, fontsize=8.3, color=BLACK,
+                ha="center", va="center")
+    arrow(ax, (0.25, 0.53), (0.38, 0.53), color=BLUE)
+    arrow(ax, (0.65, 0.53), (0.78, 0.53), color=TEAL)
+    ax.text(0.50, 0.27, "one ordinary-RGB image; one forward pass",
+            fontsize=7.2, color=BLACK, ha="center")
+    ax.text(0.50, 0.16, "no mask, donor selection, or auxiliary branch",
+            fontsize=6.7, color=GREY, ha="center")
+    save(fig, "fig5_method")
+
+
+def _paired_cells(df: pd.DataFrame, metric: str) -> pd.DataFrame:
+    cells = df[df["row_type"].str.lower() == "cell"].copy()
+    p = cells.pivot_table(index=["fold", "seed"], columns="method", values=metric)
+    p["delta"] = p["F1"] - p["F0"]
+    return p.reset_index()
 
 
 def fig6_main() -> None:
-    labels = ["clean", "foreground", "same-class\ncomposite", "cross-class\ncomposite"]
-    f0 = np.array([0.9577, 0.8331, 0.9229, 0.5189])
-    f1 = np.array([0.9556, 0.9550, 0.9291, 0.5913])
-    fig, axs = plt.subplots(1, 2, figsize=(10.5, 3.45), gridspec_kw={"wspace": 0.32})
-    ax = axs[0]; panel(ax, "a")
-    for i in range(4):
-        ax.plot([0, 1], [f0[i], f1[i]], color=GRID, linewidth=2.6, zorder=1)
-        ax.scatter([0, 1], [f0[i], f1[i]], s=34, color=[NAVY, TEAL], zorder=2)
-        ax.text(-0.06, f0[i], f0[i], ha="right", va="center", fontsize=7.2, color=NAVY)
-        ax.text(1.06, f1[i], f1[i], ha="left", va="center", fontsize=7.2, color=TEAL)
-    ax.set_xlim(-0.27, 1.28); ax.set_ylim(0.46, 1.01)
-    ax.set_xticks([0, 1], ["F0", "CXT-Fish"]); ax.set_ylabel("macro-F1")
-    ax.set_yticks([0.5, 0.7, 0.9, 1.0]); clean_axis(ax)
-    label_positions = [(0.53, 0.986), (0.50, 0.845), (0.50, 0.944), (0.50, 0.555)]
-    for (xlab, ylab), lab in zip(label_positions, labels):
-        ax.text(xlab, ylab, lab, ha="center", va="center", fontsize=7.3,
-                color=INK, linespacing=1.05,
-                bbox={"boxstyle": "round,pad=0.10", "fc": "white", "ec": "none", "alpha": 0.82})
-    # b: focal effect + guardrails
-    ax = axs[1]; panel(ax, "b")
-    names = ["cross-class\ncomposite", "same-class\ncomposite", "tail F1", "clean", "DAR-flip"]
-    delta = np.array([7.24, 0.62, 0.26, -0.21, -3.54])
-    cols = [TEAL, TEAL, TEAL, BURGUNDY, TEAL]
+    """Nine-cell paired evidence and aggregate guardrails."""
+    df = pd.read_csv(EXP / "cxt_fish_final_method_summary.csv")
+    clean = _paired_cells(df, "original_macro_f1")
+    cross = _paired_cells(df, "cross_swap_macro_f1")
+    same = _paired_cells(df, "same_swap_macro_f1")
+    tail = _paired_cells(df, "original_tail_f1")
+    dar = _paired_cells(df, "dar_flip")
+    boot = json.loads((EXP / "cxt_fish_resnet_outer_bootstrap_5000.json").read_text())
+    ci = np.array(boot["views"]["cross_swap"]["ci95"]) * 100
+
+    fig, axs = plt.subplots(1, 2, figsize=(10.7, 3.55),
+                            gridspec_kw={"width_ratios": [1.15, 0.85], "wspace": 0.38})
+    ax = axs[0]; label_panel(ax, "a")
+    x = np.arange(9)
+    fold_colors = {1: BLUE, 2: TEAL, 3: ORANGE}
+    for data, yoff, name in [(clean, 0.14, "Clean"), (cross, -0.14, "Cross-class composite")]:
+        vals = data["delta"].to_numpy() * 100
+        for i, row in data.iterrows():
+            ax.scatter(i, vals[i], s=28, facecolor=fold_colors[int(row.fold)],
+                       edgecolor="white", linewidth=0.45, zorder=3)
+        ax.plot(x, vals, color=LIGHT, linewidth=0.75, zorder=1)
+    ax.axhline(0, color=BLACK, linewidth=0.65)
+    for boundary in (2.5, 5.5):
+        ax.axvline(boundary, color=LIGHT, linewidth=0.65)
+    ax.set_xticks([1, 4, 7], ["Fold 1", "Fold 2", "Fold 3"])
+    ax.set_ylabel("CXT-Fish - F0 (percentage points)")
+    ax.set_title("Paired fold-seed effects", loc="left", fontweight="bold")
+    ax.set_ylim(-8.5, 15.5)
+    ax.text(8.78, cross["delta"].iloc[-1] * 100 + 0.5, "cross-class composite",
+            fontsize=6.6, color=TEAL, ha="right")
+    ax.text(8.78, clean["delta"].iloc[-1] * 100 - 0.8, "clean",
+            fontsize=6.6, color=BLUE, ha="right")
+    style_axis(ax, ygrid=True)
+
+    ax = axs[1]; label_panel(ax, "b")
+    names = ["Cross-class\ncomposite", "Same-class\ncomposite",
+             "Tail F1", "Clean", "DAR-flip"]
+    effects = np.array([cross.delta.mean(), same.delta.mean(), tail.delta.mean(),
+                        clean.delta.mean(), dar.delta.mean()]) * 100
     y = np.arange(len(names))[::-1]
-    ax.axvline(0, color="#8a969f", linewidth=0.8)
-    for yi, v, c, lab in zip(y, delta, cols, names):
-        ax.plot([0, v], [yi, yi], color=c, linewidth=2.5)
-        ax.scatter(v, yi, s=38, color=c, zorder=3)
-        ax.text(v + (0.20 if v >= 0 else -0.20), yi, f"{v:+.2f} pp", ha="left" if v >= 0 else "right",
-                va="center", fontsize=8, color=INK)
-    ax.set_yticks(y, names); ax.set_xlabel("CXT-Fish − F0 (percentage points)")
-    ax.set_xlim(-4.7, 8.8); clean_axis(ax, grid=False)
-    ax.text(0.02, 1.03, "equal-weight fold-seed effects", transform=ax.transAxes,
-            fontsize=7.5, color=MUTED)
-    save(fig, "fig6_main_results.png")
+    ax.axvline(0, color=BLACK, linewidth=0.65)
+    for yi, value, name in zip(y, effects, names):
+        color = TEAL if (value > 0 and name != "DAR-flip") or (value < 0 and name == "DAR-flip") else RED
+        ax.plot([0, value], [yi, yi], color=color, linewidth=1.5)
+        ax.scatter(value, yi, s=32, color=color, edgecolor="white", linewidth=0.45,
+                   zorder=3)
+        dx = 0.22 if value >= 0 else -0.22
+        ax.text(value + dx, yi, f"{value:+.2f}", fontsize=7.2,
+                ha="left" if value >= 0 else "right", va="center", color=BLACK)
+    # Only the focal cross-composite contrast receives the conditional interval.
+    ax.plot(ci, [y[0], y[0]], color=BLACK, linewidth=0.9, zorder=2)
+    ax.plot(ci, [y[0], y[0]], "|", color=BLACK, markersize=6)
+    ax.text(ci[0], y[0] + 0.34, "conditional 95% interval [6.13, 8.20]",
+            fontsize=6.2, color=GREY, ha="left")
+    ax.set_yticks(y, names)
+    ax.set_xlabel("Equal-weight mean effect (percentage points)")
+    ax.set_xlim(-5.2, 9.1)
+    ax.set_title("Main effect and guardrails", loc="left", fontweight="bold")
+    style_axis(ax, xgrid=True)
+    save(fig, "fig6_main_results")
 
 
 def fig7_controls() -> None:
     donor = pd.read_csv(EXP / "cxt_fish_donor_sensitivity_summary.csv")
-    rgb2 = pd.read_csv(EXP / "cxt_fish_rgb2_control_summary.csv")
-    fish = pd.read_csv(EXP / "cxt_fish_fish_suppressed_donor_summary.csv")
-    fig, axs = plt.subplots(1, 3, figsize=(10.8, 3.25), gridspec_kw={"wspace": 0.38})
-    # donor forest
-    ax = axs[0]; panel(ax, "a")
-    y = np.arange(len(donor))[::-1]
+    rgb = pd.read_csv(EXP / "cxt_fish_rgb2_control_summary.csv")
+    suppressed = pd.read_csv(EXP / "cxt_fish_fish_suppressed_donor_summary.csv")
+    fig, axs = plt.subplots(1, 3, figsize=(10.7, 3.2),
+                            gridspec_kw={"wspace": 0.43})
+
+    ax = axs[0]; label_panel(ax, "a")
     eff = donor["delta_f1_f0_equal_weight_cell_mean"].to_numpy() * 100
-    spread = donor["delta_sd_across_9_cells"].to_numpy() * 100
-    ax.axvline(0, color="#8a969f", linewidth=0.8)
-    ax.errorbar(eff, y, xerr=spread, fmt="o", color=TEAL, ecolor="#82b9b3",
-                capsize=2.5, markersize=4, linewidth=1.2)
-    ax.set_yticks(y, donor["donor_seed"].astype(str).tolist()[::-1])
-    ax.set_xlabel("CXT-Fish − F0 (pp)"); ax.set_title("donor realization", loc="left", fontsize=9.5, weight="bold")
-    ax.set_xlim(0, 10); clean_axis(ax, grid=False)
-    # two-RGB control
-    ax = axs[1]; panel(ax, "b")
-    rows = {r.method: r for r in rgb2.itertuples()}
-    names = ["F0", "F0-2RGB", "CXT-Fish"]
-    clean = [0.9577, float(rows["F0_2RGB"].clean_macro_f1), float(rows["CXT-Fish"].clean_macro_f1)]
-    cross = [0.5189, float(rows["F0_2RGB"].cross_composite_macro_f1), float(rows["CXT-Fish"].cross_composite_macro_f1)]
-    cols = [NAVY, AMBER, TEAL]
-    ax.plot(clean, cross, color=GRID, linewidth=1.2, zorder=1)
-    for x, yv, n, c in zip(clean, cross, names, cols):
-        ax.scatter(x, yv, s=48, color=c, zorder=3)
-        ax.text(x + 0.0008, yv + 0.008, n, fontsize=7.6, color=INK)
-    ax.set_xlabel("clean macro-F1"); ax.set_ylabel("cross-composite macro-F1")
-    ax.set_xlim(0.95, 0.96); ax.set_ylim(0.50, 0.61); clean_axis(ax)
-    ax.set_title("two-RGB control", loc="left", fontsize=9.5, weight="bold")
-    # suppression paired points
-    ax = axs[2]; panel(ax, "c")
-    means = fish.groupby("method")["cross_suppressed_macro_f1"].mean()
-    sd = fish.groupby("method")["cross_suppressed_macro_f1"].std()
-    ax.errorbar([0, 1], [means["F0"], means["F1"]], yerr=[sd["F0"], sd["F1"]], fmt="o",
-                color=TEAL, ecolor="#82b9b3", capsize=3, markersize=5, linewidth=1.2)
-    ax.set_xticks([0, 1], ["F0", "CXT-Fish"]); ax.set_ylabel("subject-suppressed\ncross macro-F1")
-    ax.set_ylim(0.62, 0.84); clean_axis(ax)
-    ax.set_title("construct-validity sensitivity", loc="left", fontsize=9.5, weight="bold")
-    save(fig, "fig7_controls.png")
+    sd = donor["delta_sd_across_9_cells"].to_numpy() * 100
+    y = np.arange(len(donor))[::-1]
+    ax.errorbar(eff, y, xerr=sd, fmt="o", color=TEAL, ecolor="#82bdb7",
+                elinewidth=0.9, capsize=2.2, markersize=4.2)
+    ax.axvline(0, color=BLACK, linewidth=0.65)
+    ax.set_yticks(y, donor["donor_seed"].astype(int).astype(str))
+    ax.set_xlabel("Cross-composite effect (pp)")
+    ax.set_title("Donor realizations", loc="left", fontweight="bold")
+    ax.text(0.02, -0.25, "point: nine-cell mean; whisker: cell SD",
+            transform=ax.transAxes, fontsize=6.1, color=GREY)
+    ax.set_xlim(-1, 15); style_axis(ax, xgrid=True)
+
+    ax = axs[1]; label_panel(ax, "b")
+    rows = rgb.set_index("method")
+    methods = ["F0", "F0_2RGB", "CXT-Fish"]
+    clean = [0.9577, rows.loc["F0_2RGB", "clean_macro_f1"], rows.loc["CXT-Fish", "clean_macro_f1"]]
+    cross = [0.5189, rows.loc["F0_2RGB", "cross_composite_macro_f1"], rows.loc["CXT-Fish", "cross_composite_macro_f1"]]
+    colors = [BLUE, ORANGE, TEAL]
+    labels = ["F0", "F0-2RGB", "CXT-Fish"]
+    for x0, y0, c, lab in zip(clean, cross, colors, labels):
+        ax.scatter(x0, y0, s=39, color=c, edgecolor="white", linewidth=0.45, zorder=3)
+        ax.text(x0 + 0.0007, y0 + 0.006, lab, fontsize=6.6, color=BLACK)
+    ax.plot(clean, cross, color=LIGHT, linewidth=0.8, zorder=1)
+    ax.set_xlabel("Clean macro-F1")
+    ax.set_ylabel("Cross-composite macro-F1")
+    ax.set_title("Ordinary-RGB control", loc="left", fontweight="bold")
+    ax.set_xlim(0.951, 0.959); ax.set_ylim(0.505, 0.608)
+    style_axis(ax, xgrid=True, ygrid=True)
+
+    ax = axs[2]; label_panel(ax, "c")
+    p = suppressed.pivot_table(index=["fold", "seed"], columns="method",
+                               values="cross_suppressed_macro_f1")
+    for _, row in p.iterrows():
+        ax.plot([0, 1], [row.F0, row.F1], color=LIGHT, linewidth=0.8)
+    ax.scatter(np.zeros(len(p)), p.F0, s=22, color=BLUE, alpha=0.9,
+               edgecolor="white", linewidth=0.35, zorder=3)
+    ax.scatter(np.ones(len(p)), p.F1, s=22, color=TEAL, alpha=0.9,
+               edgecolor="white", linewidth=0.35, zorder=3)
+    ax.plot([0, 1], [p.F0.mean(), p.F1.mean()], color=BLACK, linewidth=1.4,
+            marker="o", markersize=4.0, zorder=4)
+    ax.set_xticks([0, 1], ["F0", "CXT-Fish"])
+    ax.set_ylabel("Subject-suppressed\ncross-composite macro-F1")
+    ax.set_title("Construct sensitivity", loc="left", fontweight="bold")
+    ax.set_ylim(0.60, 0.86); style_axis(ax, ygrid=True)
+    save(fig, "fig7_controls")
 
 
 def fig8_architecture() -> None:
-    d = pd.read_csv(EXP / "cxt_fish_mobilenet_per_fold_results.csv")
-    cell = d[d["row_type"].astype(str).str.lower() == "cell"].copy()
-    p = cell.pivot_table(index="fold", columns="method", values=["original_macro_f1", "foreground_macro_f1", "cross_swap_macro_f1"])
-    fig, axs = plt.subplots(1, 2, figsize=(10.5, 3.35), gridspec_kw={"wspace": 0.34})
-    ax = axs[0]; panel(ax, "a")
-    for metric, label, color in [("original_macro_f1", "clean", BURGUNDY),
-                                 ("foreground_macro_f1", "foreground", TEAL),
-                                 ("cross_swap_macro_f1", "cross-class composite", AMBER)]:
+    df = pd.read_csv(EXP / "cxt_fish_mobilenet_per_fold_results.csv")
+    cells = df[df["row_type"].str.lower() == "cell"].copy()
+    p = cells.pivot_table(index="fold", columns="method",
+                          values=["original_macro_f1", "foreground_macro_f1",
+                                  "cross_swap_macro_f1", "same_swap_macro_f1",
+                                  "dar_flip"])
+    fig, axs = plt.subplots(1, 2, figsize=(10.7, 3.35),
+                            gridspec_kw={"width_ratios": [1.15, 0.85], "wspace": 0.36})
+
+    ax = axs[0]; label_panel(ax, "a")
+    metrics = [("original_macro_f1", "Clean", BLUE),
+               ("foreground_macro_f1", "Foreground", TEAL),
+               ("cross_swap_macro_f1", "Cross-class composite", ORANGE),
+               ("same_swap_macro_f1", "Same-class composite", PURPLE)]
+    positions = np.arange(len(metrics))[::-1]
+    offsets = [-0.12, 0, 0.12]
+    for yi, (metric, label, color) in zip(positions, metrics):
         vals = (p[(metric, "MV1")] - p[(metric, "MV0")]) * 100
-        ax.plot(vals.index, vals.values, marker="o", linewidth=1.8, markersize=5,
-                label=label, color=color)
-    ax.axhline(0, color="#8a969f", linewidth=0.8)
-    ax.set_xticks([1, 2, 3]); ax.set_xlabel("outer fold"); ax.set_ylabel("MV1 − MV0 (pp)")
-    ax.legend(frameon=False, fontsize=7.2, loc="lower left"); clean_axis(ax)
-    ax.set_title("fold-level effects", loc="left", fontsize=9.5, weight="bold")
-    # clean-robustness plane with paired arrows
-    ax = axs[1]; panel(ax, "b")
+        for fold, off, val in zip([1, 2, 3], offsets, vals):
+            ax.scatter(val, yi + off, s=24, facecolor=color, edgecolor="white",
+                       linewidth=0.4, zorder=3)
+            ax.text(val, yi + off + 0.11, str(fold), fontsize=5.7, color=GREY,
+                    ha="center", va="bottom")
+        ax.plot([vals.min(), vals.max()], [yi, yi], color=color, linewidth=1.0,
+                alpha=0.55)
+        ax.scatter(vals.mean(), yi, marker="D", s=31, color=BLACK, zorder=4)
+    ax.axvline(0, color=BLACK, linewidth=0.65)
+    ax.set_yticks(positions, [x[1] for x in metrics])
+    ax.set_xlabel("MV1 - MV0 (percentage points)")
+    ax.set_title("Fold-level architecture sensitivity", loc="left", fontweight="bold")
+    ax.text(0.02, -0.18, "circles: folds 1-3; diamonds: three-fold mean",
+            transform=ax.transAxes, fontsize=6.2, color=GREY)
+    style_axis(ax, xgrid=True)
+
+    ax = axs[1]; label_panel(ax, "b")
     for fold in [1, 2, 3]:
-        a = cell[(cell.fold == fold) & (cell.method == "MV0")].iloc[0]
-        b = cell[(cell.fold == fold) & (cell.method == "MV1")].iloc[0]
+        a = cells[(cells.fold == fold) & (cells.method == "MV0")].iloc[0]
+        b = cells[(cells.fold == fold) & (cells.method == "MV1")].iloc[0]
         ax.annotate("", xy=(b.original_macro_f1, b.cross_swap_macro_f1),
                     xytext=(a.original_macro_f1, a.cross_swap_macro_f1),
-                    arrowprops={"arrowstyle": "->", "color": "#9aa6af", "lw": 1.0})
-        ax.text(a.original_macro_f1 - 0.0007, a.cross_swap_macro_f1 - 0.006, f"{fold}", color=NAVY, fontsize=7)
-        ax.text(b.original_macro_f1 + 0.0007, b.cross_swap_macro_f1 + 0.004, f"{fold}", color=TEAL, fontsize=7)
-    ax.scatter(cell[cell.method == "MV0"].original_macro_f1, cell[cell.method == "MV0"].cross_swap_macro_f1,
-               s=38, color=NAVY, label="MV0")
-    ax.scatter(cell[cell.method == "MV1"].original_macro_f1, cell[cell.method == "MV1"].cross_swap_macro_f1,
-               s=38, color=TEAL, label="MV1")
-    ax.set_xlabel("clean macro-F1"); ax.set_ylabel("cross-class composite macro-F1")
-    ax.legend(frameon=False, fontsize=7.2, loc="lower left"); clean_axis(ax)
-    ax.set_title("architecture sensitivity", loc="left", fontsize=9.5, weight="bold")
-    save(fig, "fig8_architecture_sensitivity.png")
+                    arrowprops={"arrowstyle": "->", "lw": 0.85, "color": GREY})
+        ax.scatter(a.original_macro_f1, a.cross_swap_macro_f1, s=27, color=BLUE,
+                   edgecolor="white", linewidth=0.4, zorder=3)
+        ax.scatter(b.original_macro_f1, b.cross_swap_macro_f1, s=27, color=TEAL,
+                   edgecolor="white", linewidth=0.4, zorder=3)
+        ax.text(a.original_macro_f1, a.cross_swap_macro_f1 - 0.012, str(fold),
+                fontsize=6, color=BLUE, ha="center")
+        ax.text(b.original_macro_f1, b.cross_swap_macro_f1 + 0.010, str(fold),
+                fontsize=6, color=TEAL, ha="center")
+    ax.set_xlabel("Clean macro-F1")
+    ax.set_ylabel("Cross-composite macro-F1")
+    ax.set_title("Clean-robustness movement", loc="left", fontweight="bold")
+    ax.text(0.03, 0.04, "blue: MV0    teal: MV1", transform=ax.transAxes,
+            fontsize=6.4, color=GREY)
+    style_axis(ax, xgrid=True, ygrid=True)
+    save(fig, "fig8_architecture_sensitivity")
 
 
 if __name__ == "__main__":
-    fig1_protocol(); fig2_gate0(); fig3_context(); fig4_donor()
-    fig5_method(); fig6_main(); fig7_controls(); fig8_architecture()
+    fig1_protocol()
+    fig2_gate0()
+    fig3_context()
+    fig4_donor()
+    fig5_method()
+    fig6_main()
+    fig7_controls()
+    fig8_architecture()

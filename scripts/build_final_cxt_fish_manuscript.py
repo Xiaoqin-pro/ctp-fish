@@ -12,8 +12,8 @@ from docx.text.paragraph import Paragraph
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = Path(r"E:\xiazai\google\CXT-Fish_IMTS_Final_ConstructValidity_Manuscript.docx")
-OUT = ROOT / "paper" / "CXT-Fish_IMTS_Submission_Ready_v4.docx"
-FIG_DIR = ROOT / "reports" / "figures" / "manuscript_submission_v3"
+OUT = ROOT / "paper" / "CXT-Fish_IMTS_Submission_Ready_v5.docx"
+FIG_DIR = ROOT / "reports" / "figures" / "manuscript_submission_v4"
 
 
 def replace_paragraph(d: Document, index: int, text: str) -> None:
@@ -208,9 +208,17 @@ def build() -> None:
             p.paragraph_format.page_break_before = None
             p.paragraph_format.keep_with_next = True
         elif p.text.strip().startswith("4.6 Generic two-view supervision"):
+            p.paragraph_format.page_break_before = None
+            p.paragraph_format.keep_with_next = False
+        elif p.text.strip().startswith("Table 7 Post-hoc"):
+            p.paragraph_format.page_break_before = None
+            p.paragraph_format.keep_with_next = False
+        elif p.text.strip().startswith("4.9 Architecture sensitivity"):
+            # Keep the short architecture table from leaving only its repeated
+            # header row at the foot of the preceding page.
             p.paragraph_format.page_break_before = True
             p.paragraph_format.keep_with_next = True
-        elif p.text.strip().startswith("Table 7 Post-hoc"):
+        elif p.text.strip().startswith("Table 8 Architecture-sensitivity"):
             p.paragraph_format.page_break_before = None
             p.paragraph_format.keep_with_next = True
 
@@ -239,6 +247,31 @@ def build() -> None:
             p.paragraph_format.keep_with_next = True
         elif p.text.startswith("Table 9 Key reproducibility assets"):
             p.paragraph_format.page_break_before = None
+
+    # Final prose pass. The structure follows the compact problem-design-result-
+    # boundary rhythm common in high-impact empirical papers while preserving
+    # every frozen numerical result and evidence tier.
+    final_prose = {
+        "Underwater fish-recognition benchmarks derived from video contain correlated observations":
+            "Video-derived underwater fish benchmarks contain correlated observations: adjacent frames from one recording are not independent evidence for a new recording. We audited this problem in Fish4Knowledge and constructed F4K-16T, a fixed 27,133-image, 16-species protocol with 8,680 recorded groups. The study combines recorded-group-disjoint evaluation with foreground and donor-context interventions that test whether predictions remain stable when non-recipient evidence conflicts with the fish label. We then instantiated a simple label-level foreground-sufficiency objective. During training, one shared classifier predicts the species from both ordinary RGB and a mask-derived view in which fine surrounding detail is suppressed; at the recognition stage, after fish crops are available, inference still uses one ordinary RGB image and one forward pass. After fixing the method and evaluation definitions, we performed a three-fold, three-seed group-disjoint re-evaluation on the same Fish4Knowledge-derived corpus used during development. Cross-class donor-context-composite macro-F1 increased from 0.5189 to 0.5913, an equal-weight paired difference of 7.24 percentage points. Conditional on the completed development process, frozen fold allocation, trained checkpoints, seeds, and donor manifest, the paired group-cluster bootstrap 95% interval was 6.13 to 8.20 points. Mean clean macro-F1 changed from 0.9577 to 0.9556. Bounded post-hoc controls remained positive across five alternative donor assignments, exceeded an ordinary-RGB two-view control by 6.83 points, and persisted after donor-subject suppression. The evidence supports a targeted improvement under the tested synthetic, mask-defined intervention family, not clean-accuracy improvement, natural-context invariance, external-domain generalization, or end-to-end monitoring-system validation.",
+        "The contributions are threefold.":
+            "This study makes three contributions. First, it provides an integrated reliability audit for Fish4Knowledge-derived recognition, linking recorded-group-disjoint evaluation, nearest-neighbour correlation analysis, group-aware summaries, and controlled context interventions. Second, it instantiates a simple label-level foreground-sufficiency objective in which segmentation-derived information is privileged during training but absent from the recognition-stage inference graph. This is an application-specific intervention, not a new learning paradigm. Third, it separates the main same-corpus frozen group-disjoint re-evaluation from bounded post-hoc controls of donor assignment, duplicated RGB supervision, donor-subject evidence, architecture sensitivity, and representation-level stress. This evidence hierarchy supports a targeted robustness claim: cross-class donor-context-composite macro-F1 increased by 7.24 points, whereas clean macro-F1 changed by -0.21 points.",
+        "F2 did not improve the target clean-robustness profile":
+            "F2 did not improve the target clean-robustness profile. F3 achieved the highest mean development cross-composite score, but it added a representation-consistency assumption and produced a less favourable clean-robustness balance. F1 was selected because it most directly instantiated the label-level study hypothesis with no additional representation constraint; it was not selected by maximizing cross-composite macro-F1. F2 and F3 were retained as diagnostic ablations, and the F1 definition was frozen before the three-fold outer re-evaluation. The outer analysis therefore compares only the frozen F0 and F1 definitions (Table 4).",
+        "The effect was substantially larger under conflicting donor context.":
+            "The clearest separation appeared under conflicting donor context. Cross-class donor-context-composite macro-F1 increased from 0.5189 to 0.5913, an equal-weight paired improvement of 7.24 percentage points. The 5,000-replicate paired group-cluster bootstrap yielded a conditional 95% interval of +6.13 to +8.20 points under the frozen fold allocation, checkpoints, seeds, and donor manifest. Eight of nine fold-seed cells improved. DAR-flip decreased from 0.2146 to 0.1792 and was lower for CXT-Fish in all nine cells. Thus, the main frozen result is higher performance under the tested synthetic conflicting-context intervention, not better ordinary-view recognition (Table 5; Fig. 6).",
+        "The strongest conclusion is deliberately narrow.":
+            "The main result is deliberately narrow. In the same-corpus frozen ResNet18 group-disjoint re-evaluation, foreground-sufficiency training improved performance under the tested synthetic conflicting donor-context intervention without improving mean clean recognition. The 7.24-point cross-class-composite gain, lower DAR-flip in all nine paired cells, and positive group-weighted sensitivities jointly support a targeted robustness interpretation. They do not establish natural-context invariance, external-domain generalization, or a universal accuracy benefit.",
+        "The post-hoc controls sharpen the interpretation of that result":
+            "The post-hoc controls narrow three alternative explanations. The effect remained positive across five additional deterministic donor assignments, making one favourable seed-3407 pairing an unlikely sole explanation. CXT-Fish also exceeded the supervision- and compute-matched ordinary-RGB two-view control by 6.83 points, although the control does not match every augmentation-correlation detail. Finally, the effect persisted after visible donor-subject evidence was suppressed while pairings and checkpoints remained fixed. These analyses strengthen construct validity within the frozen intervention family; they do not create an independent evaluation.",
+        "Video-derived underwater recognition data require evaluation units":
+            "For video-derived underwater recognition, the evaluation unit is part of the scientific claim. In Fish4Knowledge, keeping recorded groups disjoint lowered class-balanced performance estimates and revealed substantial predictive information outside the annotated subject. CXT-Fish addresses one resulting failure mode with a simple label-level foreground-sufficiency intervention that leaves recognition-stage inference unchanged. In the same-corpus frozen ResNet18 re-evaluation, cross-class donor-context-composite macro-F1 increased by 7.24 points while clean macro-F1 changed by -0.21 points. The effect remained positive across donor assignments, beyond an ordinary-RGB two-view control, and after donor-subject suppression under frozen pairings. These findings support targeted robustness to the tested synthetic, mask-defined intervention family. They do not establish a general accuracy gain, context invariance, external-domain transfer, or end-to-end deployment reliability."
+    }
+    for p in d.paragraphs:
+        for start, replacement in final_prose.items():
+            if p.text.startswith(start):
+                p.text = replacement
+                break
 
     # Replace embedded figures with reproducible, corrected outputs.
     d.save(OUT)
