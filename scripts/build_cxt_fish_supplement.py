@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+import json
 
 import pandas as pd
 from docx import Document
@@ -75,6 +76,19 @@ def build():
     add_table(doc, list(wide.columns), wide.values.tolist(), [1.3, 1.1, 1.1, 1.1], size=8)
     doc.add_paragraph(f"Table S2. Recorded-group counts in the three frozen outer-test manifests. There are {len(counts)} fold × species strata; the minimum is {counts.n_recorded_groups.min()} and the maximum is {counts.n_recorded_groups.max()}. These finite clusters motivate cautious interpretation of percentile cluster intervals for sparsely represented strata.")
 
+    tier_rows = []
+    for fold in (1, 2, 3):
+        metrics_path = ROOT / "outputs" / "cxt_fish" / "final_outer_evaluation" / f"fold_{fold}" / "F0_seed3407" / "metrics.json"
+        tier_map = json.loads(metrics_path.read_text(encoding="utf-8"))["tier_map"]
+        tier_rows.append([
+            fold,
+            ", ".join(sorted([k for k, v in tier_map.items() if v == "head"], key=lambda x: int(x))),
+            ", ".join(sorted([k for k, v in tier_map.items() if v == "mid"], key=lambda x: int(x))),
+            ", ".join(sorted([k for k, v in tier_map.items() if v == "tail"], key=lambda x: int(x))),
+        ])
+    add_table(doc, ["Outer fold", "Head species", "Mid species", "Tail species"], tier_rows, [1.0, 2.0, 2.0, 2.0], size=7)
+    doc.add_paragraph("Table S2b. Fold-local class-frequency tiers used by the outer evaluators. Each mapping is derived deterministically from that fold's outer-training image frequencies; the tier labels are not imported from a single development split.")
+
     doc.add_heading("S3. Donor-species audit", level=1)
     d = pd.read_csv(ROOT / "experiments" / "cxt_fish_donor_species_effects.csv")
     drows = []
@@ -99,7 +113,7 @@ def build():
         "Main ResNet18 evidence: same-corpus frozen group-disjoint re-evaluation, 3 folds × 3 seeds (17, 2026, 3407).",
         "Primary estimand: equal-weight mean of nine unrounded fold–seed cross-class macro-F1 differences.",
         "Primary interval: 5,000 paired species-stratified group-cluster bootstrap replicates, conditional on completed development, frozen models/seeds, and frozen seed-3407 donor realization.",
-        "Donor-realization, F0-2RGB, donor-subject-suppressed, group-weighted, and MobileNet analyses: post-hoc or boundary evidence; not independent validation.",
+        "Donor-realization, F0-2RGB, donor-subject-suppressed, group-weighted, and MobileNet analyses: post-hoc validity or boundary evidence; not independent validation.",
         "Route C: fixed mechanism stress control, not faithful CLIB reproduction and not an exhaustive contrastive-learning comparison; detailed values are in Supplementary Note S6.",
         "Higher acquisition units (camera/session/deployment/date) were not verifiable from frozen recognition metadata.",
         "Official Fish4Knowledge TEST accessed: false.",

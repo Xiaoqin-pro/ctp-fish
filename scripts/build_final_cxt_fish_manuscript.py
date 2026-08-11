@@ -12,7 +12,7 @@ from docx.text.paragraph import Paragraph
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = Path(r"E:\xiazai\google\CXT-Fish_IMTS_Final_ConstructValidity_Manuscript.docx")
-OUT = ROOT / "paper" / "CXT-Fish_IMTS_Submission_Ready_v5.docx"
+OUT = ROOT / "paper" / "CXT-Fish_IMTS_Submission_Ready_v6.docx"
 FIG_DIR = ROOT / "reports" / "figures" / "manuscript_submission_v4"
 
 
@@ -272,6 +272,64 @@ def build() -> None:
             if p.text.startswith(start):
                 p.text = replacement
                 break
+
+    # Final construct-validity and reproducibility wording pass.  These
+    # replacements are deliberately performed after the prose map so that no
+    # inherited paragraph can reintroduce a broader estimand or reviewer-facing
+    # package label.
+    for p in d.paragraphs:
+        if p.text.startswith("The principal recognition summaries are macro-F1"):
+            p.text = (
+                "The principal recognition summaries are macro-F1, tail-class F1, and group-balanced accuracy. "
+                "Macro-F1 gives equal weight to species but remains image-weighted within each species; it is not "
+                "an equal-weight recorded-group estimand. For the outer evaluation, head, mid, and tail tiers are "
+                "constructed deterministically from each fold's outer-training species frequencies rather than "
+                "imported from a single development split. The resulting fold-local mappings are reported in "
+                "Supplementary Table S2. Group-balanced accuracy first averages correctness within each recorded "
+                "group and then averages over groups, reducing domination by long recordings. Image-level accuracy "
+                "and weighted F1 are retained as secondary descriptive measures. A post-hoc species-group-balanced "
+                "robustness sensitivity is reported separately."
+            )
+        elif p.text.startswith("Foreground sufficiency does not require original and foreground representations"):
+            p.text = p.text.replace("remains independently label-predictive", "remains separately label-predictive")
+        elif p.text.startswith("The post-hoc controls narrow three alternative explanations"):
+            p.text = p.text.replace("These analyses strengthen construct validity within the frozen intervention family; they do not create an independent evaluation.", "These analyses strengthen construct validity within the frozen intervention family; they do not create an independent evaluation.")
+        elif p.text.startswith("Because the main macro-F1 is class-balanced"):
+            p.text = p.text.replace(
+                "These are descriptive sensitivity estimands, not replacements for the main frozen macro-F1 result;",
+                "These favourable-cell counts are descriptive and are not interpreted as nine independent statistical trials; these are sensitivity estimands, not replacements for the main frozen macro-F1 result;"
+            )
+        if "reviewer-control" in p.text or "reviewer-motivated" in p.text:
+            p.text = p.text.replace("reviewer-control", "validity-control").replace("reviewer-motivated", "post-hoc validity")
+        if p.text.startswith("Table 6 Post-hoc donor-realization sensitivity"):
+            p.text += ". Differences are computed from unrounded cell-level values; favourable-cell counts are descriptive and are not treated as independent statistical trials."
+
+    # Keep the exact frozen implementation detail visible in the manuscript.
+    for p in d.paragraphs:
+        if p.text.startswith("Fig. 2 Group-aware evaluation"):
+            p.text = p.text.replace("(c) Same-group nearest-neighbour fractions across the two protocols.", "(c) Deep-feature same-group nearest-neighbour fractions across the two protocols; the complementary pHash audit is reported in the text.")
+
+    # Replace the public-artifact statement without implying that ignored split
+    # manifests or raw predictions are redistributed.
+    for p in d.paragraphs:
+        if p.text.startswith("Code, configurations, split manifests, audit reports"):
+            p.text = p.text.replace(
+                "Code, configurations, split manifests, audit reports, figures, and compact result artifacts are publicly available",
+                "Code, configurations for deterministic split reconstruction, manifest hashes, audit reports, figures, and compact result artifacts are publicly available"
+            )
+            p.text = p.text.replace(
+                "frozen reviewer-control and construct-validity snapshot",
+                "frozen validity-control and construct-validity snapshot"
+            )
+            p.text = p.text.replace("later packages add only reviewer-motivated controls", "later packages add only post-hoc validity controls")
+            if "portable_frozen_donor_manifest.csv" not in p.text:
+                p.text += " A path-independent export of the frozen donor pairings is provided in reports/portable_frozen_donor_manifest.csv with a local resolver note; raw images, masks, and ignored split manifests remain subject to the original data-access terms."
+
+    for table in d.tables:
+        for row in table.rows:
+            for cell in row.cells:
+                if "reviewer-control" in cell.text.lower() or "reviewer controls" in cell.text.lower():
+                    cell.text = cell.text.replace("reviewer-control", "validity-control").replace("Reviewer-control", "Validity-control").replace("Reviewer controls", "Validity controls")
 
     # Replace embedded figures with reproducible, corrected outputs.
     d.save(OUT)
