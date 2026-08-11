@@ -1,0 +1,51 @@
+{
+  "protocol": "CXT-Fish Phase 1A validation-only screening",
+  "selection_order": [
+    "tail_f1",
+    "track_balanced_accuracy",
+    "macro_f1",
+    "simpler_configuration_on_exact_tie"
+  ],
+  "selected_for_three_seed_replication": [
+    {
+      "validation_rank": 1,
+      "id": "A1",
+      "run": "A1_s1_ce_seed407",
+      "sampler": "S1",
+      "objective": "CE",
+      "prior": "none",
+      "tail_f1": 0.9702704673033462,
+      "track_balanced_accuracy": 0.9898775639287972,
+      "macro_f1": 0.9707188782051898
+    },
+    {
+      "validation_rank": 2,
+      "id": "A4-I",
+      "run": "A4I_s0_balanced_image_seed407",
+      "sampler": "S0",
+      "objective": "Balanced Softmax",
+      "prior": "image-count",
+      "tail_f1": 0.9446251993620415,
+      "track_balanced_accuracy": 0.9871158738286234,
+      "macro_f1": 0.974636229580576
+    },
+    {
+      "validation_rank": 3,
+      "id": "A2",
+      "run": "A2_s2_ce_seed407",
+      "sampler": "S2",
+      "objective": "CE",
+      "prior": "none",
+      "tail_f1": 0.9200102875666023,
+      "track_balanced_accuracy": 0.983986784678029,
+      "macro_f1": 0.9531127014798162
+    }
+  ],
+  "replication_seeds": [
+    3407,
+    2026,
+    17
+  ],
+  "internal_test_accessed": false,
+  "outer_folds_accessed": false
+}

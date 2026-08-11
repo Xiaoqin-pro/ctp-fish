@@ -1,0 +1,75 @@
+parent_commit: 0332cd9bf580cde12e5f82587dd7cae9dcba3b6b
+protocol_id: cxt_fish_reviewer_controls_v1
+status:
+  post_hoc_after_frozen_outer_results: true
+  reviewer_motivated: true
+  main_method_frozen: true
+  no_method_selection: true
+official_test_accessed: false
+
+audits:
+  class_inclusion: true
+  donor_distribution: true
+  fold3_per_class: true
+  context_diagnostic_protocol: true
+  donor_visualization: true
+
+donor_sensitivity:
+  enabled: true
+  primary_frozen_seed: 3407
+  alternative_seeds: [4101, 4102, 4103, 4104, 4105]
+  algorithm: frozen_outer_algorithm_except_seed
+  inference_only: true
+  no_manifest_selection: true
+  all_realizations_reported: true
+  primary_manifest_unchanged: true
+  primary_endpoint: cross_class_donor_context_composite_macro_f1
+  aggregation: equal_weight_cell_mean_across_9_fold_seed_cells
+  bootstrap_replicates: 5000
+  bootstrap_cluster: group_id
+  bootstrap_stratification: species_id_within_fold
+
+two_rgb_control:
+  id: F0_2RGB
+  paper_name: F0-2RGB
+  description: two_independently_augmented_ordinary_rgb_supervised_views
+  folds: [1, 2, 3]
+  seeds: [3407, 2026, 17]
+  backbone: resnet18
+  initialization: same_as_f0_f1
+  sampler: s1_track_uniform
+  recipient_batch_size: 64
+  concatenated_model_batch_size: 128
+  loss: CE(view1, y) + CE(view2, y)
+  foreground_or_mask_used: false
+  augmentation:
+    type: standard_rgb
+    random_resized_crop: {scale: [0.08, 1.0], ratio: [0.75, 1.3333333333333333]}
+    random_horizontal_flip: true
+    color_jitter: [0.1, 0.1, 0.1, 0.05]
+    independent_view_draws: true
+  optimizer: AdamW
+  learning_rate: 0.0003
+  weight_decay: 0.0001
+  scheduler: cosine
+  max_epochs: 40
+  early_stopping_patience: 7
+  checkpoint_selection: fold_local_inner_dev_clean_accuracy_only
+  no_hyperparameter_search: true
+  no_outer_evaluation_until_all_9_training_cells_complete: true
+  outer_evaluation_manifest_seed: 3407
+  bootstrap_replicates: 5000
+  bootstrap_scope: exploratory_post_hoc_control_interval
+
+analysis_rules:
+  frozen_f0_f1_unchanged: true
+  donor_sensitivity_does_not_redefine_primary: true
+  two_rgb_does_not_select_final_method: true
+  two_rgb_robustness_comparison: f1_minus_f0_2rgb_cross_class_donor_context_composite_macro_f1
+  donor_realizations_all_reported: true
+  donor_sensitivity_no_additional_realizations: true
+
+integrity:
+  official_test_accessed: false
+  historical_primary_manifests_modified: false
+  existing_outputs_overwritten: false

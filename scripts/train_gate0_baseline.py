@@ -15,6 +15,9 @@ from torch.utils.data import DataLoader
 from torchvision import transforms
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from datasets.f4k_dataset import F4KDataset
+from datasets.mask_variants import MASK_VARIANTS
+from datasets.phase1a_samplers import Phase1ASampler
+from losses.balanced_softmax import BalancedSoftmaxLoss
 from models.resnet_classifier import build_resnet18
 from tools.reproducibility import seed_everything
 
@@ -37,8 +40,8 @@ def _transforms(image_size: int):
     return train,evaluation
 
 
-def _run_epoch(model, loader, optimizer, scaler, device, amp: bool, train: bool) -> tuple[float,float]:
-    model.train(train); loss_sum=correct=count=0; criterion=nn.CrossEntropyLoss()
+def _run_epoch(model, loader, optimizer, scaler, device, amp: bool, train: bool, criterion) -> tuple[float,float]:
+    model.train(train); loss_sum=correct=count=0
     for images, targets, _, _ in loader:
         images,targets=images.to(device,non_blocking=True),targets.to(device,non_blocking=True)
         if train: optimizer.zero_grad(set_to_none=True)
@@ -50,26 +53,41 @@ def _run_epoch(model, loader, optimizer, scaler, device, amp: bool, train: bool)
     return loss_sum/count,correct/count
 
 def main() -> None:
-    parser=argparse.ArgumentParser(); parser.add_argument("--config",required=True); parser.add_argument("--split",choices=["image","track"],required=True); parser.add_argument("--seed",type=int); parser.add_argument("--resume"); parser.add_argument("--outer-folds"); parser.add_argument("--mask-variant",choices=["original","foreground_only","background_only"],default="original"); parser.add_argument("--run-name"); parser.add_argument("--dry-run",action="store_true"); args=parser.parse_args()
+    parser=argparse.ArgumentParser(); parser.add_argument("--config",required=True); parser.add_argument("--split",choices=["image","track"],required=True); parser.add_argument("--seed",type=int); parser.add_argument("--resume"); parser.add_argument("--outer-folds"); parser.add_argument("--mask-variant",choices=MASK_VARIANTS,default="original"); parser.add_argument("--shuffle-index"); parser.add_argument("--output-root"); parser.add_argument("--run-name"); parser.add_argument("--phase1a-sampler",choices=["s0_frame_uniform","s1_track_uniform","s2_class_uniform","s3_class_track_uniform"],default="s0_frame_uniform"); parser.add_argument("--classification-loss",choices=["ce","balanced_softmax"],default="ce"); parser.add_argument("--prior",choices=["image","track"]); parser.add_argument("--dry-run",action="store_true"); args=parser.parse_args()
     if args.outer_folds: raise ValueError("Outer evaluation folds are locked during Gate-0.")
     cfg=yaml.safe_load(Path(args.config).read_text()); seed=int(args.seed if args.seed is not None else cfg["seeds"][0]); seed_everything(seed)
-    if args.dry_run: print({"model":"torchvision ResNet18 ImageNet", "split":args.split, "epochs":cfg["epochs"], "seed":seed, "mask_variant":args.mask_variant, "forbidden_methods":"no reweighting, no trajectory sampler, no contrastive/prototype method"}); return
+    if args.classification_loss == "ce" and args.prior: raise ValueError("--prior is only valid with balanced_softmax.")
+    if args.classification_loss == "balanced_softmax" and not args.prior: raise ValueError("balanced_softmax requires --prior image or track.")
+    if args.phase1a_sampler != "s0_frame_uniform" and args.split != "track": raise ValueError("Phase 1A samplers require the track split.")
+    if args.dry_run: print({"model":"torchvision ResNet18 ImageNet", "split":args.split, "epochs":cfg["epochs"], "seed":seed, "mask_variant":args.mask_variant, "phase1a_sampler":args.phase1a_sampler,"classification_loss":args.classification_loss,"prior":args.prior}); return
     metadata=pd.read_csv(cfg["metadata_path"]); split_path=Path(cfg[f"{args.split}_split_path"]); split=pd.read_csv(split_path)
     if split_path.resolve()==Path(cfg["outer_folds_path"]).resolve(): raise ValueError("Outer evaluation folds are locked during Gate-0.")
-    records=metadata.merge(split[["image_path","split"]],on="image_path",validate="one_to_one"); class_ids=sorted(records.species_id.astype(str).unique()); train_tf,eval_tf=_transforms(int(cfg["image_size"]))
+    records=metadata.merge(split[["image_path","split"]],on="image_path",validate="one_to_one")
+    if args.mask_variant == "shuffled_mask_background":
+        if not args.shuffle_index: raise ValueError("shuffled-mask view requires --shuffle-index.")
+        index=pd.read_csv(args.shuffle_index); required={"recipient_image_path","donor_mask_path","split"}
+        if not required.issubset(index.columns): raise ValueError("Shuffle index schema mismatch.")
+        records=records.merge(index[list(required)], left_on=["image_path","split"], right_on=["recipient_image_path","split"], validate="one_to_one").drop(columns="recipient_image_path")
+    class_ids=sorted(records.species_id.astype(str).unique()); train_tf,eval_tf=_transforms(int(cfg["image_size"]))
     train_set=F4KDataset(records[records.split=="train"],train_tf,mask_variant=args.mask_variant,class_ids=class_ids); val_set=F4KDataset(records[records.split=="val"],eval_tf,mask_variant=args.mask_variant,class_ids=class_ids)
     batch=int(cfg["batch_size"]); device=torch.device("cuda" if torch.cuda.is_available() else "cpu"); generator=torch.Generator().manual_seed(seed)
     common=dict(batch_size=batch, num_workers=2, pin_memory=device.type=="cuda", worker_init_fn=partial(_seed_worker, seed=seed), generator=generator)
-    train_loader=DataLoader(train_set,shuffle=True,**common); val_loader=DataLoader(val_set,shuffle=False,**common)
+    sampler=None if args.phase1a_sampler == "s0_frame_uniform" else Phase1ASampler(train_set.records,args.phase1a_sampler,seed)
+    train_loader=DataLoader(train_set,shuffle=sampler is None,sampler=sampler,**common); val_loader=DataLoader(val_set,shuffle=False,**common)
     model=build_resnet18(len(class_ids)).to(device); optimizer=AdamW(model.parameters(),lr=float(cfg["learning_rate"]),weight_decay=float(cfg["weight_decay"])); scheduler=CosineAnnealingLR(optimizer,T_max=int(cfg["epochs"])); scaler=torch.amp.GradScaler(device.type,enabled=bool(cfg["amp"]) and device.type=="cuda")
+    if args.classification_loss == "ce": criterion=nn.CrossEntropyLoss()
+    else:
+        train_records=train_set.records.copy(); counts=train_records.species_id.astype(str).value_counts() if args.prior == "image" else train_records.groupby(train_records.species_id.astype(str)).group_id.nunique()
+        criterion=BalancedSoftmaxLoss(torch.tensor([float(counts[str(label)]) for label in class_ids],device=device))
     run_name=args.run_name or f"resnet18_{args.split}_seed{seed}"
     if Path(run_name).name != run_name: raise ValueError("run-name must be a simple directory name.")
-    output=Path("outputs/gate0/background_audit")/run_name if args.run_name else Path("outputs/gate0/baselines")/run_name
+    output=Path(args.output_root)/run_name if args.output_root else (Path("outputs/gate0/background_audit")/run_name if args.run_name else Path("outputs/gate0/baselines")/run_name)
     output.mkdir(parents=True,exist_ok=True); history=[]; best=-1.; patience=0; start=1
     if args.resume:
         state=torch.load(args.resume,map_location=device,weights_only=False); model.load_state_dict(state["model"]); optimizer.load_state_dict(state["optimizer"]); scheduler.load_state_dict(state["scheduler"]); scaler.load_state_dict(state["scaler"]); history=state["history"]; best=state["best_val_accuracy"]; start=int(state["epoch"])+1
     for epoch in range(start,int(cfg["epochs"])+1):
-        train_loss,train_acc=_run_epoch(model,train_loader,optimizer,scaler,device,bool(cfg["amp"]),True); val_loss,val_acc=_run_epoch(model,val_loader,optimizer,scaler,device,bool(cfg["amp"]),False); scheduler.step(); row={"epoch":epoch,"train_loss":train_loss,"train_accuracy":train_acc,"val_loss":val_loss,"val_accuracy":val_acc,"lr":optimizer.param_groups[0]["lr"]}; history.append(row)
+        if sampler: sampler.set_epoch(epoch)
+        train_loss,train_acc=_run_epoch(model,train_loader,optimizer,scaler,device,bool(cfg["amp"]),True,criterion); val_loss,val_acc=_run_epoch(model,val_loader,optimizer,scaler,device,bool(cfg["amp"]),False,criterion); scheduler.step(); row={"epoch":epoch,"train_loss":train_loss,"train_accuracy":train_acc,"val_loss":val_loss,"val_accuracy":val_acc,"lr":optimizer.param_groups[0]["lr"]}; history.append(row)
         if val_acc>best:
             best=val_acc; patience=0; _atomic_torch_save({"model":model.state_dict(),"class_ids":class_ids,"epoch":epoch,"best_val_accuracy":best,"config":cfg},output/"best.pt")
         else: patience+=1
@@ -77,5 +95,5 @@ def main() -> None:
         pd.DataFrame(history).to_csv(output/"training_curve.csv",index=False)
         print(json.dumps(row))
         if patience>=int(cfg["early_stopping_patience"]): break
-    (output/"run_metadata.json").write_text(json.dumps({"split":args.split,"seed":seed,"device":str(device),"batch_size":batch,"class_ids":class_ids,"mask_variant":args.mask_variant,"audit_run":bool(args.run_name)},indent=2))
+    (output/"run_metadata.json").write_text(json.dumps({"split":args.split,"seed":seed,"device":str(device),"batch_size":batch,"class_ids":class_ids,"mask_variant":args.mask_variant,"shuffle_index":args.shuffle_index,"phase1a_sampler":args.phase1a_sampler,"classification_loss":args.classification_loss,"prior":args.prior,"audit_run":bool(args.run_name)},indent=2))
 if __name__=="__main__": main()

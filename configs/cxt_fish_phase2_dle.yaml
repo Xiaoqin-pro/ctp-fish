@@ -1,0 +1,28 @@
+# DLE-Fish final constrained pilot protocol. No test or outer-fold access.
+metadata_path: outputs/gate0/audit/f4k_metadata.csv
+track_split_path: splits/f4k16t_track_level_dev.csv
+inner_folds_path: splits/f4k16t_phase2_inner_2fold.json
+class_ids_path: splits/f4k16t_class_ids.json
+image_size: 224
+batch_size: 64
+epochs: 40
+early_stopping_patience: 7
+optimizer: AdamW
+learning_rate: 0.0003
+weight_decay: 0.0001
+pilot_seed: 3407
+foreground_blur_kernel: 21
+foreground_blur_sigma: 5.0
+mask_feather_radius: 3
+original_sampler: s1_track_uniform
+lambda_masked: 1.0
+lambda_evidence_values: [0.05, 0.10]
+feature_schema: resnet18_layer4_pre_pool_v1
+evidence_name: positive_class_evidence_concentration
+evidence_temperature: 1.0
+min_mask_feature_cells: 1.0
+variants: [Q0, Q1, Q2a, Q2b]
+locked_partitions:
+  inner_development: train_only
+  compatibility_check: val_once_after_freeze
+  prohibited: [internal_test, outer_folds, official_test]

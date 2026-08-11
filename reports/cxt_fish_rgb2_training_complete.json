@@ -1,0 +1,61 @@
+{
+  "status": "complete",
+  "cells": 9,
+  "official_test_accessed": false,
+  "records": [
+    {
+      "fold": 1,
+      "seed": 3407,
+      "path": "D:\\111\\Desktop\\ctp-fish\\outputs\\cxt_fish\\rgb2_control_outer\\fold_1\\F0_2RGB_seed3407",
+      "config_sha256": "9023f0a6e90314242509869b5c9129f715af00c18f568da2d39d4d4380a0cc16"
+    },
+    {
+      "fold": 1,
+      "seed": 2026,
+      "path": "D:\\111\\Desktop\\ctp-fish\\outputs\\cxt_fish\\rgb2_control_outer\\fold_1\\F0_2RGB_seed2026",
+      "config_sha256": "9023f0a6e90314242509869b5c9129f715af00c18f568da2d39d4d4380a0cc16"
+    },
+    {
+      "fold": 1,
+      "seed": 17,
+      "path": "D:\\111\\Desktop\\ctp-fish\\outputs\\cxt_fish\\rgb2_control_outer\\fold_1\\F0_2RGB_seed17",
+      "config_sha256": "9023f0a6e90314242509869b5c9129f715af00c18f568da2d39d4d4380a0cc16"
+    },
+    {
+      "fold": 2,
+      "seed": 3407,
+      "path": "D:\\111\\Desktop\\ctp-fish\\outputs\\cxt_fish\\rgb2_control_outer\\fold_2\\F0_2RGB_seed3407",
+      "config_sha256": "9023f0a6e90314242509869b5c9129f715af00c18f568da2d39d4d4380a0cc16"
+    },
+    {
+      "fold": 2,
+      "seed": 2026,
+      "path": "D:\\111\\Desktop\\ctp-fish\\outputs\\cxt_fish\\rgb2_control_outer\\fold_2\\F0_2RGB_seed2026",
+      "config_sha256": "9023f0a6e90314242509869b5c9129f715af00c18f568da2d39d4d4380a0cc16"
+    },
+    {
+      "fold": 2,
+      "seed": 17,
+      "path": "D:\\111\\Desktop\\ctp-fish\\outputs\\cxt_fish\\rgb2_control_outer\\fold_2\\F0_2RGB_seed17",
+      "config_sha256": "9023f0a6e90314242509869b5c9129f715af00c18f568da2d39d4d4380a0cc16"
+    },
+    {
+      "fold": 3,
+      "seed": 3407,
+      "path": "D:\\111\\Desktop\\ctp-fish\\outputs\\cxt_fish\\rgb2_control_outer\\fold_3\\F0_2RGB_seed3407",
+      "config_sha256": "9023f0a6e90314242509869b5c9129f715af00c18f568da2d39d4d4380a0cc16"
+    },
+    {
+      "fold": 3,
+      "seed": 2026,
+      "path": "D:\\111\\Desktop\\ctp-fish\\outputs\\cxt_fish\\rgb2_control_outer\\fold_3\\F0_2RGB_seed2026",
+      "config_sha256": "9023f0a6e90314242509869b5c9129f715af00c18f568da2d39d4d4380a0cc16"
+    },
+    {
+      "fold": 3,
+      "seed": 17,
+      "path": "D:\\111\\Desktop\\ctp-fish\\outputs\\cxt_fish\\rgb2_control_outer\\fold_3\\F0_2RGB_seed17",
+      "config_sha256": "9023f0a6e90314242509869b5c9129f715af00c18f568da2d39d4d4380a0cc16"
+    }
+  ]
+}

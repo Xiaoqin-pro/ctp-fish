@@ -1,0 +1,5 @@
+analysis,effect,analysis_role,artifact,effect_min,effect_max,ci95_low,ci95_high
+Primary donor,0.072359494466496,frozen main donor-composite result,experiments/cxt_fish_donor_sensitivity_summary.csv,,,,
+5-donor sensitivity range,0.08203053495825408,post-hoc donor-realization sensitivity,experiments/cxt_fish_donor_sensitivity_summary.csv,0.0774395225625612,0.0883982928111568,,
+Donor-species-equal-weight sensitivity,0.03711696821869642,post-hoc descriptive reweighting,experiments/cxt_fish_donor_species_effects.csv,,,,
+Fish-suppressed donor sensitivity,0.10477855366308246,post_hoc_construct_validity_sensitivity,experiments/cxt_fish_fish_suppressed_donor_bootstrap_5000.json,,,0.09383694972953135,0.1161175257439341

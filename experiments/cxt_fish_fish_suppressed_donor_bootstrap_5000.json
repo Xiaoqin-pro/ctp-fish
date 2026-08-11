@@ -1,0 +1,18 @@
+{
+  "schema_version": "cxt_fish_fish_suppressed_donor_bootstrap_v1",
+  "observed_point_estimate": 0.10477855366308246,
+  "bootstrap_mean": 0.10480684346428894,
+  "ci95": [
+    0.09383694972953135,
+    0.1161175257439341
+  ],
+  "bootstrap_replicates": 5000,
+  "bootstrap_seed": 3410,
+  "interval_method": "percentile",
+  "estimand": "equal_weight_cell_mean_CXT_minus_F0_fish_suppressed_cross_class_donor_composite_macro_f1",
+  "cluster_unit": "group_id",
+  "stratification": "ground_truth_species_within_fold",
+  "shared_resampling_structure": "paired_methods_and_three_seeds_within_fold",
+  "analysis_role": "post_hoc_construct_validity_sensitivity",
+  "official_test_accessed": false
+}

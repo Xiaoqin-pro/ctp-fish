@@ -1,0 +1,42 @@
+{
+  "analysis": "post-hoc group-weighted robustness sensitivity",
+  "source": "frozen outer per-image predictions and frozen outer-test manifests",
+  "cells": 18,
+  "view": "cross_swap",
+  "metrics": [
+    {
+      "metric": "group_balanced_accuracy",
+      "F0_mean": 0.6979015862794642,
+      "F0_sd": 0.02779636831483238,
+      "F1_mean": 0.7425916092803164,
+      "F1_sd": 0.016102332767855245,
+      "delta_pp": 4.469002300085221,
+      "delta_sd_pp": 3.1250377426824705,
+      "favourable_cells": 8,
+      "n_cells": 9,
+      "estimand": "equal-weight nine cell mean of fold-seed group-weighted accuracy differences",
+      "official_test_accessed": false
+    },
+    {
+      "metric": "species_group_balanced_accuracy",
+      "F0_mean": 0.5271083807604295,
+      "F0_sd": 0.015646447254878133,
+      "F1_mean": 0.5943919470899744,
+      "F1_sd": 0.026883138022143437,
+      "delta_pp": 6.7283566329544975,
+      "delta_sd_pp": 2.5760330246812573,
+      "favourable_cells": 9,
+      "n_cells": 9,
+      "estimand": "equal-weight nine cell mean of fold-seed group-weighted accuracy differences",
+      "official_test_accessed": false
+    }
+  ],
+  "group_count_table": {
+    "rows": 48,
+    "species": 16,
+    "folds": 3,
+    "minimum_groups_per_fold_species": 5,
+    "maximum_groups_per_fold_species": 1414
+  },
+  "official_test_accessed": false
+}

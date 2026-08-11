@@ -1,0 +1,29 @@
+{
+  "status": "complete",
+  "protocol_config_sha256": "587bc24fe2f088e899dfb0c3b82b7fbe1addcb0bb71c5a1346a86d78ec6706b1",
+  "protocol_commit": "7471c0cb64305a811231755b033fd14a3199300f",
+  "audit_source_head": "893d4a76ce1714db1d240f3967ed5015e210bc98",
+  "final_package_head_recorded_by_git": true,
+  "rgb2_observed_point_estimate": 0.06829039643796267,
+  "rgb2_bootstrap_mean": 0.06832533664491452,
+  "rgb2_ci95": [
+    0.05710974015531095,
+    0.0787065804865791
+  ],
+  "fish_suppressed_observed_point_estimate": 0.10477855366308246,
+  "fish_suppressed_ci95": [
+    0.09383694972953135,
+    0.1161175257439341
+  ],
+  "donor_residual_pairs": 27133,
+  "donor_residual_mean": 0.030147858306594538,
+  "donor_species_count": 16,
+  "gate0_rows": 96,
+  "frozen_f0_f1_checkpoint_count": 18,
+  "frozen_rgb2_checkpoint_count": 9,
+  "no_new_checkpoints_created": true,
+  "official_test_accessed": false,
+  "primary_manifest_unchanged": true,
+  "five_donor_manifests_unchanged": true,
+  "analysis_role": "post_hoc_construct_validity_and_statistics_repair"
+}
